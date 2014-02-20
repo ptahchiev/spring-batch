@@ -28,7 +28,7 @@ import org.springframework.batch.core.JobInstance;
  * @author Lucas Ward
  * @author Robert Kasanicky
  */
-public interface JobExecutionDao {
+public interface JobExecutionDao<T extends JobExecution, I extends JobInstance> {
 
 	/**
 	 * Save a new JobExecution.
@@ -38,23 +38,13 @@ public interface JobExecutionDao {
 	 * 
 	 * @param jobExecution
 	 */
-	void saveJobExecution(JobExecution jobExecution);
-
-	/**
-	 * Update and existing JobExecution.
-	 * 
-	 * Preconditions: jobExecution must have an Id (which can be obtained by the
-	 * save method) and a jobInstanceId.
-	 * 
-	 * @param jobExecution
-	 */
-	void updateJobExecution(JobExecution jobExecution);
+	void save(T jobExecution);
 
 	/**
 	 * Return all {@link JobExecution} for given {@link JobInstance}, sorted
 	 * backwards by creation order (so the first element is the most recent).
 	 */
-	List<JobExecution> findJobExecutions(JobInstance jobInstance);
+	List<T> findAllByJobInstance(I jobInstance);
 
 	/**
 	 * Find the last {@link JobExecution} to have been created for a given
@@ -62,18 +52,18 @@ public interface JobExecutionDao {
 	 * @param jobInstance the {@link JobInstance}
 	 * @return the last {@link JobExecution} to execute for this instance
 	 */
-	JobExecution getLastJobExecution(JobInstance jobInstance);
+	T findByJobInstanceOrderByJobExecutionIdAsc(I jobInstance);
 
 	/**
 	 * @return all {@link JobExecution} that are still running (or indeterminate
 	 * state), i.e. having null end date, for the specified job name.
 	 */
-	Set<JobExecution> findRunningJobExecutions(String jobName);
+	Set<T> findByJobNameAndEndTimeIsNullOrderByJobExecutionId(String jobName);
 
 	/**
 	 * @return the {@link JobExecution} for given identifier.
 	 */
-	JobExecution getJobExecution(Long executionId);
+	T findOne(Long executionId);
 
 	/**
 	 * Because it may be possible that the status of a JobExecution is updated
@@ -82,6 +72,6 @@ public interface JobExecutionDao {
 	 * 
 	 * @param jobExecution to be updated.
 	 */
-	void synchronizeStatus(JobExecution jobExecution);
+	void synchronizeStatus(T jobExecution);
 
 }

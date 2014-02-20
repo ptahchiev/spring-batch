@@ -31,7 +31,7 @@ import org.springframework.batch.core.launch.NoSuchJobException;
  * @author Michael Minella
  *
  */
-public interface JobInstanceDao {
+public interface JobInstanceDao<I> {
 
 	/**
 	 * Create a JobInstance with given name and parameters.
@@ -46,7 +46,7 @@ public interface JobInstanceDao {
 	 * @param jobParameters
 	 * @return JobInstance
 	 */
-	JobInstance createJobInstance(String jobName, JobParameters jobParameters);
+	I createJobInstance(String jobName, JobParameters jobParameters);
 
 	/**
 	 * Find the job instance that matches the given name and parameters. If no
@@ -57,7 +57,7 @@ public interface JobInstanceDao {
 	 * @return {@link JobInstance} object matching the job name and
 	 * {@link JobParameters} or null
 	 */
-	JobInstance getJobInstance(String jobName, JobParameters jobParameters);
+	I getJobInstance(String jobName, JobParameters jobParameters);
 
 	/**
 	 * Fetch the job instance with the provided identifier.
@@ -65,7 +65,7 @@ public interface JobInstanceDao {
 	 * @param instanceId the job identifier
 	 * @return the job instance with this identifier or null if it doesn't exist
 	 */
-	JobInstance getJobInstance(Long instanceId);
+	I getJobInstance(Long instanceId);
 
 	/**
 	 * Fetch the JobInstance for the provided JobExecution.
@@ -73,7 +73,7 @@ public interface JobInstanceDao {
 	 * @param jobExecution the JobExecution
 	 * @return the JobInstance for the provided execution or null if it doesn't exist.
 	 */
-	JobInstance getJobInstance(JobExecution jobExecution);
+	I getJobInstance(JobExecution jobExecution);
 
 	/**
 	 * Fetch the last job instances with the provided name, sorted backwards by
@@ -85,7 +85,7 @@ public interface JobInstanceDao {
 	 * @param count the maximum number of objects to return
 	 * @return the job instances with this name or empty if none
 	 */
-	List<JobInstance> getJobInstances(String jobName, int start, int count);
+	List<I> getJobInstances(String jobName, int start, int count);
 
 	/**
 	 * Retrieve the names of all job instances sorted alphabetically - i.e. jobs

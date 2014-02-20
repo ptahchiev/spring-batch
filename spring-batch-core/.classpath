@@ -6,38 +6,82 @@
   <classpathentry kind="src" path="src/main/resources" excluding="**/*.java"/>
   <classpathentry kind="output" path="target/classes"/>
   <classpathentry kind="var" path="M2_REPO/javax/batch/javax.batch-api/1.0/javax.batch-api-1.0.jar"/>
-  <classpathentry kind="var" path="M2_REPO/javax/inject/javax.inject/1/javax.inject-1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/javax/inject/javax.inject/1/javax.inject-1.jar" sourcepath="M2_REPO/javax/inject/javax.inject/1/javax.inject-1-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/javax/inject/javax.inject/1/javax.inject-1-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
   <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
   <classpathentry kind="src" path="/spring-batch-infrastructure"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-core/3.2.7.RELEASE/spring-core-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar" sourcepath="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
   <classpathentry kind="var" path="M2_REPO/org/springframework/retry/spring-retry/1.0.2.RELEASE/spring-retry-1.0.2.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-context/3.2.7.RELEASE/spring-context-3.2.7.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-aop/3.2.7.RELEASE/spring-aop-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0.jar" sourcepath="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/aopalliance/aopalliance/1.0/aopalliance-1.0-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-beans/3.2.7.RELEASE/spring-beans-3.2.7.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-expression/3.2.7.RELEASE/spring-expression-3.2.7.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/ibm/jbatch/com.ibm.jbatch-tck-spi/1.0/com.ibm.jbatch-tck-spi-1.0.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/hsqldb/hsqldb/2.3.1/hsqldb-2.3.1.jar" sourcepath="M2_REPO/org/hsqldb/hsqldb/2.3.1/hsqldb-2.3.1-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/hsqldb/hsqldb/2.3.1/hsqldb-2.3.1.jar" sourcepath="M2_REPO/org/hsqldb/hsqldb/2.3.1/hsqldb-2.3.1-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/org/hsqldb/hsqldb/2.3.1/hsqldb-2.3.1-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
   <classpathentry kind="var" path="M2_REPO/com/h2database/h2/1.2.125/h2-1.2.125.jar"/>
-  <classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.4/commons-io-1.4.jar"/>
-  <classpathentry kind="var" path="M2_REPO/commons-dbcp/commons-dbcp/1.2.2/commons-dbcp-1.2.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.4/commons-io-1.4.jar" sourcepath="M2_REPO/commons-io/commons-io/1.4/commons-io-1.4-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/commons-io/commons-io/1.4/commons-io-1.4-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="var" path="M2_REPO/commons-dbcp/commons-dbcp/1.2.2/commons-dbcp-1.2.2.jar" sourcepath="M2_REPO/commons-dbcp/commons-dbcp/1.2.2/commons-dbcp-1.2.2-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/commons-dbcp/commons-dbcp/1.2.2/commons-dbcp-1.2.2-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
   <classpathentry kind="var" path="M2_REPO/commons-pool/commons-pool/1.3/commons-pool-1.3.jar"/>
-  <classpathentry kind="var" path="M2_REPO/junit/junit/4.10/junit-4.10.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/junit/junit/4.10/junit-4.10.jar" sourcepath="M2_REPO/junit/junit/4.10/junit-4.10-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/junit/junit/4.10/junit-4.10-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="var" path="M2_REPO/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1.jar" sourcepath="M2_REPO/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/aspectj/aspectjrt/1.5.4/aspectjrt-1.5.4.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/aspectj/aspectjweaver/1.5.4/aspectjweaver-1.5.4.jar"/>
-  <classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar"/>
+  <classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar" sourcepath="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/thoughtworks/xstream/xstream/1.4.4/xstream-1.4.4.jar"/>
-  <classpathentry kind="var" path="M2_REPO/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c.jar"/>
+  <classpathentry kind="var" path="M2_REPO/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1.jar" sourcepath="M2_REPO/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="var" path="M2_REPO/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c.jar" sourcepath="M2_REPO/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
   <classpathentry kind="var" path="M2_REPO/org/codehaus/jettison/jettison/1.2/jettison-1.2.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/osgi/osgi_R4_core/1.0/osgi_R4_core-1.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-jdbc/3.2.7.RELEASE/spring-jdbc-3.2.7.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-tx/3.2.7.RELEASE/spring-tx-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/data/spring-data-jpa/1.5.0.BUILD-SNAPSHOT/spring-data-jpa-1.5.0.BUILD-SNAPSHOT.jar" sourcepath="M2_REPO/org/springframework/data/spring-data-jpa/1.5.0.BUILD-SNAPSHOT/spring-data-jpa-1.5.0.BUILD-SNAPSHOT-sources.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/data/spring-data-commons/1.5.0.RELEASE/spring-data-commons-1.5.0.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.6.6/slf4j-api-1.6.6.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/springframework/data/spring-data-jpa/1.5.0.BUILD-SNAPSHOT/spring-data-jpa-1.5.0.BUILD-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/springframework/data/spring-data-commons/1.5.0.RELEASE/spring-data-commons-1.5.0.RELEASE.jar" sourcepath="M2_REPO/org/springframework/data/spring-data-commons/1.5.0.RELEASE/spring-data-commons-1.5.0.RELEASE-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/org/springframework/data/spring-data-commons/1.5.0.RELEASE/spring-data-commons-1.5.0.RELEASE-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.6.6/slf4j-api-1.6.6.jar" sourcepath="M2_REPO/org/slf4j/slf4j-api/1.6.6/slf4j-api-1.6.6-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/org/slf4j/slf4j-api/1.6.6/slf4j-api-1.6.6-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
   <classpathentry kind="var" path="M2_REPO/org/slf4j/jcl-over-slf4j/1.7.6/jcl-over-slf4j-1.7.6.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-orm/3.2.7.RELEASE/spring-orm-3.2.7.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/osgi/spring-osgi-core/1.1.2/spring-osgi-core-1.1.2.jar"/>
@@ -45,5 +89,9 @@
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-test/3.2.7.RELEASE/spring-test-3.2.7.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-log4j12/1.6.6/slf4j-log4j12-1.6.6.jar"/>
   <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.14/log4j-1.2.14.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.jar" sourcepath="M2_REPO/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/home/petar/.m2/repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
 </classpath>

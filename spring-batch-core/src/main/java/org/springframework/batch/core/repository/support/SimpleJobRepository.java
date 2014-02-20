@@ -57,17 +57,17 @@ import org.springframework.util.Assert;
  * @see StepExecutionDao
  *
  */
-public class SimpleJobRepository implements JobRepository {
+public class SimpleJobRepository<JE extends JobExecution, I extends JobInstance, SE extends StepExecution> implements JobRepository<JE, I, SE> {
 
 	private static final Log logger = LogFactory.getLog(SimpleJobRepository.class);
 
-	private JobInstanceDao jobInstanceDao;
+	private JobInstanceDao<I> jobInstanceDao;
 
-	private JobExecutionDao jobExecutionDao;
+	private JobExecutionDao<JE, I> jobExecutionDao;
 
-	private StepExecutionDao stepExecutionDao;
+	private StepExecutionDao<SE, JE> stepExecutionDao;
 
-	private ExecutionContextDao ecDao;
+	private ExecutionContextDao<JE, SE> ecDao;
 
 	/**
 	 * Provide default constructor with low visibility in case user wants to use
@@ -76,8 +76,8 @@ public class SimpleJobRepository implements JobRepository {
 	SimpleJobRepository() {
 	}
 
-	public SimpleJobRepository(JobInstanceDao jobInstanceDao, JobExecutionDao jobExecutionDao,
-			StepExecutionDao stepExecutionDao, ExecutionContextDao ecDao) {
+	public SimpleJobRepository(JobInstanceDao<I> jobInstanceDao, JobExecutionDao<JE, I> jobExecutionDao,
+			StepExecutionDao<SE, JE> stepExecutionDao, ExecutionContextDao<JE, SE> ecDao) {
 		super();
 		this.jobInstanceDao = jobInstanceDao;
 		this.jobExecutionDao = jobExecutionDao;
@@ -91,7 +91,7 @@ public class SimpleJobRepository implements JobRepository {
 	}
 
 	@Override
-	public JobExecution createJobExecution(String jobName, JobParameters jobParameters)
+	public JE createJobExecution(String jobName, JobParameters jobParameters)
 			throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
 
 		Assert.notNull(jobName, "Job name must not be null.");
@@ -106,13 +106,13 @@ public class SimpleJobRepository implements JobRepository {
 		 * has finished.
 		 */
 
-		JobInstance jobInstance = jobInstanceDao.getJobInstance(jobName, jobParameters);
+		I jobInstance = jobInstanceDao.getJobInstance(jobName, jobParameters);
 		ExecutionContext executionContext;
 
 		// existing job instance found
 		if (jobInstance != null) {
 
-			List<JobExecution> executions = jobExecutionDao.findJobExecutions(jobInstance);
+			List<JE> executions = jobExecutionDao.findAllByJobInstance(jobInstance);
 
 			// check for running executions and find the last started
 			for (JobExecution execution : executions) {
@@ -128,7 +128,7 @@ public class SimpleJobRepository implements JobRepository {
 							+ ".  If you want to run this job again, change the parameters.");
 				}
 			}
-			executionContext = ecDao.getExecutionContext(jobExecutionDao.getLastJobExecution(jobInstance));
+			executionContext = ecDao.getJobExecutionContext(jobExecutionDao.findByJobInstanceOrderByJobExecutionIdAsc(jobInstance));
 		}
 		else {
 			// no job found, create one
@@ -136,52 +136,52 @@ public class SimpleJobRepository implements JobRepository {
 			executionContext = new ExecutionContext();
 		}
 
-		JobExecution jobExecution = new JobExecution(jobInstance, jobParameters, null);
+		JE jobExecution = (JE) new JobExecution(jobInstance, jobParameters, null);
 		jobExecution.setExecutionContext(executionContext);
 		jobExecution.setLastUpdated(new Date(System.currentTimeMillis()));
 
 		// Save the JobExecution so that it picks up an ID (useful for clients
 		// monitoring asynchronous executions):
-		jobExecutionDao.saveJobExecution(jobExecution);
-		ecDao.saveExecutionContext(jobExecution);
+		jobExecutionDao.save(jobExecution);
+		ecDao.saveJobExecutionContext(jobExecution);
 
 		return jobExecution;
 
 	}
 
 	@Override
-	public void update(JobExecution jobExecution) {
+	public void update(JE jobExecution) {
 
 		Assert.notNull(jobExecution, "JobExecution cannot be null.");
 		Assert.notNull(jobExecution.getJobId(), "JobExecution must have a Job ID set.");
 		Assert.notNull(jobExecution.getId(), "JobExecution must be already saved (have an id assigned).");
 
 		jobExecution.setLastUpdated(new Date(System.currentTimeMillis()));
-		jobExecutionDao.updateJobExecution(jobExecution);
+		jobExecutionDao.save(jobExecution);
 	}
 
 	@Override
-	public void add(StepExecution stepExecution) {
+	public void addStepExecution(SE stepExecution) {
 		validateStepExecution(stepExecution);
 
 		stepExecution.setLastUpdated(new Date(System.currentTimeMillis()));
 		stepExecutionDao.saveStepExecution(stepExecution);
-		ecDao.saveExecutionContext(stepExecution);
+		ecDao.saveStepExecutionContext(stepExecution);
 	}
 
 	@Override
-	public void addAll(Collection<StepExecution> stepExecutions) {
+	public void addAll(Collection<SE> stepExecutions) {
 		Assert.notNull(stepExecutions, "Attempt to save a null collection of step executions");
-		for (StepExecution stepExecution : stepExecutions) {
+		for (SE stepExecution : stepExecutions) {
 			validateStepExecution(stepExecution);
 			stepExecution.setLastUpdated(new Date(System.currentTimeMillis()));
 		}
 		stepExecutionDao.saveStepExecutions(stepExecutions);
-		ecDao.saveExecutionContexts(stepExecutions);
+		ecDao.saveStepExecutionContexts(stepExecutions);
 	}
 
 	@Override
-	public void update(StepExecution stepExecution) {
+	public void updateStepExecution(SE stepExecution) {
 		validateStepExecution(stepExecution);
 		Assert.notNull(stepExecution.getId(), "StepExecution must already be saved (have an id assigned)");
 
@@ -197,33 +197,33 @@ public class SimpleJobRepository implements JobRepository {
 	}
 
 	@Override
-	public void updateExecutionContext(StepExecution stepExecution) {
+	public void updateStepExecutionContext(SE stepExecution) {
 		validateStepExecution(stepExecution);
 		Assert.notNull(stepExecution.getId(), "StepExecution must already be saved (have an id assigned)");
-		ecDao.updateExecutionContext(stepExecution);
+		ecDao.updateStepExecutionContext(stepExecution);
 	}
 
 	@Override
-	public void updateExecutionContext(JobExecution jobExecution) {
-		ecDao.updateExecutionContext(jobExecution);
+	public void updateJobExecutionContext(JE jobExecution) {
+		ecDao.updateJobExecutionContext(jobExecution);
 	}
 
 	@Override
-	public StepExecution getLastStepExecution(JobInstance jobInstance, String stepName) {
-		List<JobExecution> jobExecutions = jobExecutionDao.findJobExecutions(jobInstance);
-		List<StepExecution> stepExecutions = new ArrayList<StepExecution>(jobExecutions.size());
+	public StepExecution getLastStepExecution(I jobInstance, String stepName) {
+		List<JE> jobExecutions = jobExecutionDao.findAllByJobInstance(jobInstance);
+		List<SE> stepExecutions = new ArrayList<SE>(jobExecutions.size());
 
-		for (JobExecution jobExecution : jobExecutions) {
+		for (JE jobExecution : jobExecutions) {
 			stepExecutionDao.addStepExecutions(jobExecution);
-			for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
+			for (SE stepExecution : jobExecution.getStepExecutions()) {
 				if (stepName.equals(stepExecution.getStepName())) {
 					stepExecutions.add(stepExecution);
 				}
 			}
 		}
 
-		StepExecution latest = null;
-		for (StepExecution stepExecution : stepExecutions) {
+		SE latest = null;
+		for (SE stepExecution : stepExecutions) {
 			if (latest == null) {
 				latest = stepExecution;
 			}
@@ -233,9 +233,9 @@ public class SimpleJobRepository implements JobRepository {
 		}
 
 		if (latest != null) {
-			ExecutionContext stepExecutionContext = ecDao.getExecutionContext(latest);
+			ExecutionContext stepExecutionContext = ecDao.getStepExecutionContext(latest);
 			latest.setExecutionContext(stepExecutionContext);
-			ExecutionContext jobExecutionContext = ecDao.getExecutionContext(latest.getJobExecution());
+			ExecutionContext jobExecutionContext = ecDao.getJobExecutionContext(latest.getJobExecution());
 			latest.getJobExecution().setExecutionContext(jobExecutionContext);
 		}
 
@@ -246,10 +246,10 @@ public class SimpleJobRepository implements JobRepository {
 	 * @return number of executions of the step within given job instance
 	 */
 	@Override
-	public int getStepExecutionCount(JobInstance jobInstance, String stepName) {
+	public int getStepExecutionCount(I jobInstance, String stepName) {
 		int count = 0;
-		List<JobExecution> jobExecutions = jobExecutionDao.findJobExecutions(jobInstance);
-		for (JobExecution jobExecution : jobExecutions) {
+		List<JE> jobExecutions = jobExecutionDao.findAllByJobInstance(jobInstance);
+		for (JE jobExecution : jobExecutions) {
 			stepExecutionDao.addStepExecutions(jobExecution);
 			for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
 				if (stepName.equals(stepExecution.getStepName())) {
@@ -268,8 +268,8 @@ public class SimpleJobRepository implements JobRepository {
 	 *
 	 * @param stepExecution
 	 */
-	private void checkForInterruption(StepExecution stepExecution) {
-		JobExecution jobExecution = stepExecution.getJobExecution();
+	private void checkForInterruption(SE stepExecution) {
+		JE jobExecution = stepExecution.getJobExecution();
 		jobExecutionDao.synchronizeStatus(jobExecution);
 		if (jobExecution.isStopping()) {
 			logger.info("Parent JobExecution is stopped, so passing message on to StepExecution");
@@ -278,46 +278,46 @@ public class SimpleJobRepository implements JobRepository {
 	}
 
 	@Override
-	public JobExecution getLastJobExecution(String jobName, JobParameters jobParameters) {
-		JobInstance jobInstance = jobInstanceDao.getJobInstance(jobName, jobParameters);
+	public JE getLastJobExecution(String jobName, JobParameters jobParameters) {
+		I jobInstance = jobInstanceDao.getJobInstance(jobName, jobParameters);
 		if (jobInstance == null) {
 			return null;
 		}
-		JobExecution jobExecution = jobExecutionDao.getLastJobExecution(jobInstance);
+		JE jobExecution = jobExecutionDao.findByJobInstanceOrderByJobExecutionIdAsc(jobInstance);
 
 		if (jobExecution != null) {
-			jobExecution.setExecutionContext(ecDao.getExecutionContext(jobExecution));
+			jobExecution.setExecutionContext(ecDao.getJobExecutionContext(jobExecution));
 		}
 		return jobExecution;
 
 	}
 
 	@Override
-	public JobInstance createJobInstance(String jobName, JobParameters jobParameters) {
+	public I createJobInstance(String jobName, JobParameters jobParameters) {
 		Assert.notNull(jobName, "A job name is required to create a JobInstance");
 		Assert.notNull(jobParameters, "Job parameters are required to create a JobInstance");
 
-		JobInstance jobInstance = jobInstanceDao.createJobInstance(jobName, jobParameters);
+		I jobInstance = jobInstanceDao.createJobInstance(jobName, jobParameters);
 
 		return jobInstance;
 	}
 
 	@Override
-	public JobExecution createJobExecution(JobInstance jobInstance,
+	public JE createJobExecution(I jobInstance,
 			JobParameters jobParameters, String jobConfigurationLocation) {
 
 		Assert.notNull(jobInstance, "A JobInstance is required to associate the JobExecution with");
 		Assert.notNull(jobParameters, "A JobParameters object is required to create a JobExecution");
 
-		JobExecution jobExecution = new JobExecution(jobInstance, jobParameters, jobConfigurationLocation);
+		JE jobExecution = (JE) new JobExecution(jobInstance, jobParameters, jobConfigurationLocation);
 		ExecutionContext executionContext = new ExecutionContext();
 		jobExecution.setExecutionContext(executionContext);
 		jobExecution.setLastUpdated(new Date(System.currentTimeMillis()));
 
 		// Save the JobExecution so that it picks up an ID (useful for clients
 		// monitoring asynchronous executions):
-		jobExecutionDao.saveJobExecution(jobExecution);
-		ecDao.saveExecutionContext(jobExecution);
+		jobExecutionDao.save(jobExecution);
+		ecDao.saveJobExecutionContext(jobExecution);
 
 		return jobExecution;
 	}

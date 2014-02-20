@@ -35,7 +35,7 @@ import org.springframework.util.SerializationUtils;
 /**
  * In-memory implementation of {@link JobExecutionDao}.
  */
-public class MapJobExecutionDao implements JobExecutionDao {
+public class MapJobExecutionDao implements JobExecutionDao<JobExecution, JobInstance> {
 
 	// JDK6 Make this into a ConcurrentSkipListMap: adds and removes tend to be very near the front or back
 	private final ConcurrentMap<Long, JobExecution> executionsById = new ConcurrentHashMap<Long, JobExecution>();
@@ -52,7 +52,7 @@ public class MapJobExecutionDao implements JobExecutionDao {
 	}
 
 	@Override
-	public void saveJobExecution(JobExecution jobExecution) {
+	public void save(JobExecution jobExecution) {
 		Assert.isTrue(jobExecution.getId() == null);
 		Long newId = currentId.getAndIncrement();
 		jobExecution.setId(newId);
@@ -61,7 +61,7 @@ public class MapJobExecutionDao implements JobExecutionDao {
 	}
 
 	@Override
-	public List<JobExecution> findJobExecutions(JobInstance jobInstance) {
+	public List<JobExecution> findAllByJobInstance(JobInstance jobInstance) {
 		List<JobExecution> executions = new ArrayList<JobExecution>();
 		for (JobExecution exec : executionsById.values()) {
 			if (exec.getJobInstance().equals(jobInstance)) {
@@ -87,23 +87,23 @@ public class MapJobExecutionDao implements JobExecutionDao {
 		return executions;
 	}
 
-	@Override
-	public void updateJobExecution(JobExecution jobExecution) {
-		Long id = jobExecution.getId();
-		Assert.notNull(id, "JobExecution is expected to have an id (should be saved already)");
-		JobExecution persistedExecution = executionsById.get(id);
-		Assert.notNull(persistedExecution, "JobExecution must already be saved");
-
-		synchronized (jobExecution) {
-			if (!persistedExecution.getVersion().equals(jobExecution.getVersion())) {
-				throw new OptimisticLockingFailureException("Attempt to update step execution id=" + id
-						+ " with wrong version (" + jobExecution.getVersion() + "), where current version is "
-						+ persistedExecution.getVersion());
-			}
-			jobExecution.incrementVersion();
-			executionsById.put(id, copy(jobExecution));
-		}
-	}
+//	@Override
+//	public void updateJobExecution(JobExecution jobExecution) {
+//		Long id = jobExecution.getId();
+//		Assert.notNull(id, "JobExecution is expected to have an id (should be saved already)");
+//		JobExecution persistedExecution = executionsById.get(id);
+//		Assert.notNull(persistedExecution, "JobExecution must already be saved");
+//
+//		synchronized (jobExecution) {
+//			if (!persistedExecution.getVersion().equals(jobExecution.getVersion())) {
+//				throw new OptimisticLockingFailureException("Attempt to update step execution id=" + id
+//						+ " with wrong version (" + jobExecution.getVersion() + "), where current version is "
+//						+ persistedExecution.getVersion());
+//			}
+//			jobExecution.incrementVersion();
+//			executionsById.put(id, copy(jobExecution));
+//		}
+//	}
 
 	@Override
 	public JobExecution getLastJobExecution(JobInstance jobInstance) {
@@ -148,13 +148,13 @@ public class MapJobExecutionDao implements JobExecutionDao {
 	 * (java.lang.Long)
 	 */
 	@Override
-	public JobExecution getJobExecution(Long executionId) {
+	public JobExecution findOne(Long executionId) {
 		return copy(executionsById.get(executionId));
 	}
 
 	@Override
 	public void synchronizeStatus(JobExecution jobExecution) {
-		JobExecution saved = getJobExecution(jobExecution.getId());
+		JobExecution saved = findOne(jobExecution.getId());
 		if (saved.getVersion().intValue() != jobExecution.getVersion().intValue()) {
 			jobExecution.upgradeStatus(saved.getStatus());
 			jobExecution.setVersion(saved.getVersion());

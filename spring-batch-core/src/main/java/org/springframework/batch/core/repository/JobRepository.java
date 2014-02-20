@@ -44,7 +44,7 @@ import org.springframework.transaction.annotation.Isolation;
  * @author David Turanski
  * @author Michael Minella
  */
-public interface JobRepository {
+public interface JobRepository<J, I, SE> {
 
 	/**
 	 * Check if an instance of this job already exists with the parameters
@@ -64,7 +64,7 @@ public interface JobRepository {
 	 * @param jobParameters parameters used to execute the job
 	 * @return the new {@link JobInstance}
 	 */
-	JobInstance createJobInstance(String jobName, JobParameters jobParameters);
+	I createJobInstance(String jobName, JobParameters jobParameters);
 
 	/**
 	 * Create a new {@link JobExecution} based upon the {@link JobInstance} it's associated
@@ -76,7 +76,7 @@ public interface JobRepository {
 	 * @param jobConfigurationLocation
 	 * @return the new {@link JobExecution}
 	 */
-	JobExecution createJobExecution(JobInstance jobInstance, JobParameters jobParameters, String jobConfigurationLocation);
+	J createJobExecution(I jobInstance, JobParameters jobParameters, String jobConfigurationLocation);
 
 	/**
 	 * <p>
@@ -115,7 +115,7 @@ public interface JobRepository {
 	 * found and was already completed successfully.
 	 *
 	 */
-	JobExecution createJobExecution(String jobName, JobParameters jobParameters)
+	J createJobExecution(String jobName, JobParameters jobParameters)
 			throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException;
 
 	/**
@@ -126,7 +126,7 @@ public interface JobRepository {
 	 *
 	 * @param jobExecution
 	 */
-	void update(JobExecution jobExecution);
+	void update(J jobExecution);
 
 	/**
 	 * Save the {@link StepExecution} and its {@link ExecutionContext}. ID will
@@ -138,7 +138,7 @@ public interface JobRepository {
 	 *
 	 * @param stepExecution
 	 */
-	void add(StepExecution stepExecution);
+	void addStepExecution(SE stepExecution);
 
 	/**
 	 * Save a collection of {@link StepExecution}s and each {@link ExecutionContext}. The
@@ -149,7 +149,7 @@ public interface JobRepository {
 	 *
 	 * @param stepExecution
 	 */
-	void addAll(Collection<StepExecution> stepExecutions);
+	void addAll(Collection<SE> stepExecutions);
 
 	/**
 	 * Update the {@link StepExecution} (but not its {@link ExecutionContext}).
@@ -158,7 +158,7 @@ public interface JobRepository {
 	 *
 	 * @param stepExecution
 	 */
-	void update(StepExecution stepExecution);
+	void updateStepExecution(SE stepExecution);
 
 	/**
 	 * Persist the updated {@link ExecutionContext}s of the given
@@ -166,32 +166,32 @@ public interface JobRepository {
 	 *
 	 * @param stepExecution
 	 */
-	void updateExecutionContext(StepExecution stepExecution);
+	void updateStepExecutionContext(SE stepExecution);
 
 	/**
 	 * Persist the updated {@link ExecutionContext} of the given
 	 * {@link JobExecution}.
 	 * @param jobExecution
 	 */
-	void updateExecutionContext(JobExecution jobExecution);
+	void updateJobExecutionContext(J jobExecution);
 
 	/**
 	 * @param stepName the name of the step execution that might have run.
 	 * @return the last execution of step for the given job instance.
 	 */
-	StepExecution getLastStepExecution(JobInstance jobInstance, String stepName);
+	StepExecution getLastStepExecution(I jobInstance, String stepName);
 
 	/**
 	 * @param stepName the name of the step execution that might have run.
 	 * @return the execution count of the step within the given job instance.
 	 */
-	int getStepExecutionCount(JobInstance jobInstance, String stepName);
+	int getStepExecutionCount(I jobInstance, String stepName);
 
 	/**
 	 * @param jobName the name of the job that might have run
 	 * @param jobParameters parameters identifying the {@link JobInstance}
 	 * @return the last execution of job if exists, null otherwise
 	 */
-	JobExecution getLastJobExecution(String jobName, JobParameters jobParameters);
+	J getLastJobExecution(String jobName, JobParameters jobParameters);
 
 }

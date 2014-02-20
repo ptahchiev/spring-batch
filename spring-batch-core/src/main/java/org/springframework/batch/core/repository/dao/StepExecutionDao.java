@@ -21,7 +21,7 @@ import java.util.Collection;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 
-public interface StepExecutionDao {
+public interface StepExecutionDao<SE, JE> {
 
 	/**
 	 * Save the given StepExecution.
@@ -32,7 +32,7 @@ public interface StepExecutionDao {
 	 * 
 	 * @param stepExecution
 	 */
-	void saveStepExecution(StepExecution stepExecution);
+	void saveStepExecution(SE stepExecution);
 
 	/**
 	 * Save the given collection of StepExecution as a batch.
@@ -43,7 +43,7 @@ public interface StepExecutionDao {
 	 * 
 	 * @param stepExecutions
 	 */
-	void saveStepExecutions(Collection<StepExecution> stepExecutions);
+	void saveStepExecutions(Collection<SE> stepExecutions);
 
 	/**
 	 * Update the given StepExecution
@@ -52,7 +52,7 @@ public interface StepExecutionDao {
 	 * 
 	 * @param stepExecution
 	 */
-	void updateStepExecution(StepExecution stepExecution);
+	void updateStepExecution(SE stepExecution);
 
 	/**
 	 * Retrieve a {@link StepExecution} from its id.
@@ -61,13 +61,13 @@ public interface StepExecutionDao {
 	 * @param stepExecutionId the step execution id
 	 * @return a {@link StepExecution}
 	 */
-	StepExecution getStepExecution(JobExecution jobExecution, Long stepExecutionId);
+	SE getStepExecution(JE jobExecution, Long stepExecutionId);
 
 	/**
 	 * Retrieve all the {@link StepExecution} for the parent {@link JobExecution}.
 	 * 
 	 * @param jobExecution the parent job execution
 	 */
-	void addStepExecutions(JobExecution jobExecution);
+	void addStepExecutions(JE jobExecution);
 
 }
