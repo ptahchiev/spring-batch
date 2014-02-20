@@ -285,7 +285,7 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
-			<plugin>
+			<!--plugin>
 				<groupId>com.springsource.bundlor</groupId>
 				<artifactId>com.springsource.bundlor.maven</artifactId>
 				<version>${bundlor.version}</version>
@@ -299,7 +299,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -772,5 +772,20 @@
 			<name>Spring Snapshot Repository</name>
 			<url>s3://maven.springframework.org/snapshot</url>
 		</snapshotRepository>
+		
 	</distributionManagement>
+	<repositories>
+	  <repository>
+		<id>spring-gemstone-releases</id>
+		<url>http://repo.springsource.org/gemstone-release-cache/</url>
+	  </repository>
+	   <repository>
+			<id>spring-milestones</id>
+			<url>http://repo.springsource.org/libs-milestone/</url>
+		</repository>
+		<repository>
+			<id>bundles-extnernal</id>
+			<url>http://repository.springsource.com/maven/bundles/external/</url>
+		</repository>
+	</repositories>
 </project>
