@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.util.Assert;
 import org.springframework.util.SerializationUtils;
 
@@ -46,24 +45,24 @@ public class MapJobExecutionDao implements JobExecutionDao<JobExecution, JobInst
 		executionsById.clear();
 	}
 
-	private static JobExecution copy(JobExecution original) {
-		JobExecution copy = (JobExecution) SerializationUtils.deserialize(SerializationUtils.serialize(original));
+	private static JobExecution copy(final JobExecution original) {
+		final JobExecution copy = (JobExecution) SerializationUtils.deserialize(SerializationUtils.serialize(original));
 		return copy;
 	}
 
 	@Override
-	public void save(JobExecution jobExecution) {
+	public void save(final JobExecution jobExecution) {
 		Assert.isTrue(jobExecution.getId() == null);
-		Long newId = currentId.getAndIncrement();
+		final Long newId = currentId.getAndIncrement();
 		jobExecution.setId(newId);
 		jobExecution.incrementVersion();
 		executionsById.put(newId, copy(jobExecution));
 	}
 
 	@Override
-	public List<JobExecution> findAllByJobInstance(JobInstance jobInstance) {
-		List<JobExecution> executions = new ArrayList<JobExecution>();
-		for (JobExecution exec : executionsById.values()) {
+	public List<JobExecution> findAllByJobInstance(final JobInstance jobInstance) {
+		final List<JobExecution> executions = new ArrayList<JobExecution>();
+		for (final JobExecution exec : executionsById.values()) {
 			if (exec.getJobInstance().equals(jobInstance)) {
 				executions.add(copy(exec));
 			}
@@ -71,8 +70,8 @@ public class MapJobExecutionDao implements JobExecutionDao<JobExecution, JobInst
 		Collections.sort(executions, new Comparator<JobExecution>() {
 
 			@Override
-			public int compare(JobExecution e1, JobExecution e2) {
-				long result = (e1.getId() - e2.getId());
+			public int compare(final JobExecution e1, final JobExecution e2) {
+				final long result = (e1.getId() - e2.getId());
 				if (result > 0) {
 					return -1;
 				}
@@ -106,9 +105,9 @@ public class MapJobExecutionDao implements JobExecutionDao<JobExecution, JobInst
 //	}
 
 	@Override
-	public JobExecution getLastJobExecution(JobInstance jobInstance) {
+	public JobExecution findByJobInstanceOrderByJobExecutionIdAsc(final JobInstance jobInstance) {
 		JobExecution lastExec = null;
-		for (JobExecution exec : executionsById.values()) {
+		for (final JobExecution exec : executionsById.values()) {
 			if (!exec.getJobInstance().equals(jobInstance)) {
 				continue;
 			}
@@ -129,9 +128,9 @@ public class MapJobExecutionDao implements JobExecutionDao<JobExecution, JobInst
 	 * findRunningJobExecutions(java.lang.String)
 	 */
 	@Override
-	public Set<JobExecution> findRunningJobExecutions(String jobName) {
-		Set<JobExecution> result = new HashSet<JobExecution>();
-		for (JobExecution exec : executionsById.values()) {
+	public Set<JobExecution> findByJobNameAndEndTimeIsNullOrderByJobExecutionId(final String jobName) {
+		final Set<JobExecution> result = new HashSet<JobExecution>();
+		for (final JobExecution exec : executionsById.values()) {
 			if (!exec.getJobInstance().getJobName().equals(jobName) || !exec.isRunning()) {
 				continue;
 			}
@@ -148,13 +147,13 @@ public class MapJobExecutionDao implements JobExecutionDao<JobExecution, JobInst
 	 * (java.lang.Long)
 	 */
 	@Override
-	public JobExecution findOne(Long executionId) {
+	public JobExecution findOne(final Long executionId) {
 		return copy(executionsById.get(executionId));
 	}
 
 	@Override
-	public void synchronizeStatus(JobExecution jobExecution) {
-		JobExecution saved = findOne(jobExecution.getId());
+	public void synchronizeStatus(final JobExecution jobExecution) {
+		final JobExecution saved = findOne(jobExecution.getId());
 		if (saved.getVersion().intValue() != jobExecution.getVersion().intValue()) {
 			jobExecution.upgradeStatus(saved.getStatus());
 			jobExecution.setVersion(saved.getVersion());

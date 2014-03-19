@@ -38,7 +38,7 @@ import org.springframework.batch.item.ExecutionContext;
  *
  */
 @SuppressWarnings("serial")
-public class JobExecution extends Entity {
+public class JobExecution extends Entity implements org.springframework.batch.core.intf.JobExecution<JobInstance, StepExecution> {
 
 	private final JobParameters jobParameters;
 
@@ -64,7 +64,7 @@ public class JobExecution extends Entity {
 
 	private final String jobConfigurationName;
 
-	public JobExecution(JobExecution original) {
+	public JobExecution(final JobExecution original) {
 		this.jobParameters = original.getJobParameters();
 		this.jobInstance = original.getJobInstance();
 		this.stepExecutions = original.getStepExecutions();
@@ -87,18 +87,18 @@ public class JobExecution extends Entity {
 	 *
 	 * @param job the job of which this execution is a part
 	 */
-	public JobExecution(JobInstance job, Long id, JobParameters jobParameters, String jobConfigurationName) {
+	public JobExecution(final JobInstance job, final Long id, final JobParameters jobParameters, final String jobConfigurationName) {
 		super(id);
 		this.jobInstance = job;
 		this.jobParameters = jobParameters == null ? new JobParameters() : jobParameters;
 		this.jobConfigurationName = jobConfigurationName;
 	}
 
-	public JobExecution(JobInstance job, JobParameters jobParameters, String jobConfigurationName) {
+	public JobExecution(final JobInstance job, final JobParameters jobParameters, final String jobConfigurationName) {
 		this(job, null, jobParameters, jobConfigurationName);
 	}
 
-	public JobExecution(Long id, JobParameters jobParameters, String jobConfigurationName) {
+	public JobExecution(final Long id, final JobParameters jobParameters, final String jobConfigurationName) {
 		this(null, id, jobParameters, jobConfigurationName);
 	}
 
@@ -107,15 +107,15 @@ public class JobExecution extends Entity {
 	 *
 	 * @param job the enclosing {@link JobInstance}
 	 */
-	public JobExecution(JobInstance job, JobParameters jobParameters) {
+	public JobExecution(final JobInstance job, final JobParameters jobParameters) {
 		this(job, null, jobParameters, null);
 	}
 
-	public JobExecution(Long id, JobParameters jobParameters) {
+	public JobExecution(final Long id, final JobParameters jobParameters) {
 		this(null, id, jobParameters, null);
 	}
 
-	public JobExecution(Long id) {
+	public JobExecution(final Long id) {
 		this(null, id, null, null);
 	}
 
@@ -127,11 +127,11 @@ public class JobExecution extends Entity {
 		return endTime;
 	}
 
-	public void setJobInstance(JobInstance jobInstance) {
+	public void setJobInstance(final JobInstance jobInstance) {
 		this.jobInstance = jobInstance;
 	}
 
-	public void setEndTime(Date endTime) {
+	public void setEndTime(final Date endTime) {
 		this.endTime = endTime;
 	}
 
@@ -139,7 +139,7 @@ public class JobExecution extends Entity {
 		return startTime;
 	}
 
-	public void setStartTime(Date startTime) {
+	public void setStartTime(final Date startTime) {
 		this.startTime = startTime;
 	}
 
@@ -152,7 +152,7 @@ public class JobExecution extends Entity {
 	 *
 	 * @param status the status to set
 	 */
-	public void setStatus(BatchStatus status) {
+	public void setStatus(final BatchStatus status) {
 		this.status = status;
 	}
 
@@ -163,7 +163,7 @@ public class JobExecution extends Entity {
 	 *
 	 * @param status the new status value
 	 */
-	public void upgradeStatus(BatchStatus status) {
+	public void upgradeStatus(final BatchStatus status) {
 		this.status = this.status.upgradeTo(status);
 	}
 
@@ -183,7 +183,7 @@ public class JobExecution extends Entity {
 	/**
 	 * @param exitStatus
 	 */
-	public void setExitStatus(ExitStatus exitStatus) {
+	public void setExitStatus(final ExitStatus exitStatus) {
 		this.exitStatus = exitStatus;
 	}
 
@@ -197,7 +197,8 @@ public class JobExecution extends Entity {
 	/**
 	 * @return the Job that is executing.
 	 */
-	public JobInstance getJobInstance() {
+	@Override
+    public JobInstance getJobInstance() {
 		return jobInstance;
 	}
 
@@ -214,8 +215,8 @@ public class JobExecution extends Entity {
 	 * Register a step execution with the current job execution.
 	 * @param stepName the name of the step the new execution is associated with
 	 */
-	public StepExecution createStepExecution(String stepName) {
-		StepExecution stepExecution = new StepExecution(stepName, this);
+	public StepExecution createStepExecution(final String stepName) {
+		final StepExecution stepExecution = new StepExecution(stepName, this);
 		this.stepExecutions.add(stepExecution);
 		return stepExecution;
 	}
@@ -245,7 +246,7 @@ public class JobExecution extends Entity {
 	 *
 	 */
 	public void stop() {
-		for (StepExecution stepExecution : stepExecutions) {
+		for (final StepExecution stepExecution : stepExecutions) {
 			stepExecution.setTerminateOnly();
 		}
 		status = BatchStatus.STOPPING;
@@ -256,7 +257,7 @@ public class JobExecution extends Entity {
 	 *
 	 * @param executionContext the context
 	 */
-	public void setExecutionContext(ExecutionContext executionContext) {
+	public void setExecutionContext(final ExecutionContext executionContext) {
 		this.executionContext = executionContext;
 	}
 
@@ -280,7 +281,7 @@ public class JobExecution extends Entity {
 	/**
 	 * @param createTime creation time of this execution.
 	 */
-	public void setCreateTime(Date createTime) {
+	public void setCreateTime(final Date createTime) {
 		this.createTime = createTime;
 	}
 
@@ -293,7 +294,7 @@ public class JobExecution extends Entity {
 	 * existing instances.
 	 * @param stepExecution
 	 */
-	void addStepExecution(StepExecution stepExecution) {
+	void addStepExecution(final StepExecution stepExecution) {
 		stepExecutions.add(stepExecution);
 	}
 
@@ -312,7 +313,7 @@ public class JobExecution extends Entity {
 	 *
 	 * @param lastUpdated
 	 */
-	public void setLastUpdated(Date lastUpdated) {
+	public void setLastUpdated(final Date lastUpdated) {
 		this.lastUpdated = lastUpdated;
 	}
 
@@ -325,7 +326,7 @@ public class JobExecution extends Entity {
 	 *
 	 * @param t
 	 */
-	public synchronized void addFailureException(Throwable t) {
+	public synchronized void addFailureException(final Throwable t) {
 		this.failureExceptions.add(t);
 	}
 
@@ -338,8 +339,8 @@ public class JobExecution extends Entity {
 	 */
 	public synchronized List<Throwable> getAllFailureExceptions() {
 
-		Set<Throwable> allExceptions = new HashSet<Throwable>(failureExceptions);
-		for (StepExecution stepExecution : stepExecutions) {
+		final Set<Throwable> allExceptions = new HashSet<Throwable>(failureExceptions);
+		for (final StepExecution stepExecution : stepExecutions) {
 			allExceptions.addAll(stepExecution.getFailureExceptions());
 		}
 
@@ -350,7 +351,7 @@ public class JobExecution extends Entity {
 	 * Deserialise and ensure transient fields are re-instantiated when read
 	 * back
 	 */
-	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+	private void readObject(final ObjectInputStream stream) throws IOException, ClassNotFoundException {
 		stream.defaultReadObject();
 		failureExceptions = new ArrayList<Throwable>();
 	}
@@ -371,7 +372,7 @@ public class JobExecution extends Entity {
 	 * Add some step executions.  For internal use only.
 	 * @param stepExecutions step executions to add to the current list
 	 */
-	public void addStepExecutions(List<StepExecution> stepExecutions) {
+	public void addStepExecutions(final List<StepExecution> stepExecutions) {
 		if (stepExecutions!=null) {
 			this.stepExecutions.removeAll(stepExecutions);
 			this.stepExecutions.addAll(stepExecutions);

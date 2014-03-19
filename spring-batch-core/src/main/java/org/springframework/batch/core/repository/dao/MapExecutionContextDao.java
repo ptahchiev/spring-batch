@@ -35,7 +35,7 @@ import org.springframework.util.SerializationUtils;
  * @author David Turanski
  */
 @SuppressWarnings("serial")
-public class MapExecutionContextDao implements ExecutionContextDao {
+public class MapExecutionContextDao implements ExecutionContextDao<JobExecution, StepExecution> {
 
 	private final ConcurrentMap<ContextKey, ExecutionContext> contexts = TransactionAwareProxyFactory
 			.createAppendOnlyTransactionalMap();
@@ -47,7 +47,7 @@ public class MapExecutionContextDao implements ExecutionContextDao {
 		private final Type type;
 		private final long id;
 
-		private ContextKey(Type type, long id) {
+		private ContextKey(final Type type, final long id) {
 			if(type == null) {
 				throw new IllegalStateException("Need a non-null type for a context");
 			}
@@ -56,7 +56,7 @@ public class MapExecutionContextDao implements ExecutionContextDao {
 		}
 
 		@Override
-		public int compareTo(ContextKey them) {
+		public int compareTo(final ContextKey them) {
 			if(them == null) {
 				return 1;
 			}
@@ -72,7 +72,7 @@ public class MapExecutionContextDao implements ExecutionContextDao {
 		}
 
 		@Override
-		public boolean equals(Object them) {
+		public boolean equals(final Object them) {
 			if(them == null) {
 				return false;
 			}
@@ -82,7 +82,7 @@ public class MapExecutionContextDao implements ExecutionContextDao {
 			return false;
 		}
 
-		public boolean equals(ContextKey them) {
+		public boolean equals(final ContextKey them) {
 			if(them == null) {
 				return false;
 			}
@@ -91,7 +91,7 @@ public class MapExecutionContextDao implements ExecutionContextDao {
 
 		@Override
 		public int hashCode() {
-			int value = (int)(id^(id>>>32));
+			final int value = (int)(id^(id>>>32));
 			switch(type) {
 			case STEP: return value;
 			case JOB: return ~value;
@@ -99,62 +99,62 @@ public class MapExecutionContextDao implements ExecutionContextDao {
 			}
 		}
 
-		public static ContextKey step(long id) { return new ContextKey(Type.STEP, id); }
+		public static ContextKey step(final long id) { return new ContextKey(Type.STEP, id); }
 
-		public static ContextKey job(long id) { return new ContextKey(Type.JOB, id); }
+		public static ContextKey job(final long id) { return new ContextKey(Type.JOB, id); }
 	}
 
 	public void clear() {
 		contexts.clear();
 	}
 
-	private static ExecutionContext copy(ExecutionContext original) {
+	private static ExecutionContext copy(final ExecutionContext original) {
 		return (ExecutionContext) SerializationUtils.deserialize(SerializationUtils.serialize(original));
 	}
 
 	@Override
-	public ExecutionContext getExecutionContext(StepExecution stepExecution) {
+	public ExecutionContext getStepExecutionContext(final StepExecution stepExecution) {
 		return copy(contexts.get(ContextKey.step(stepExecution.getId())));
 	}
 
 	@Override
-	public void updateExecutionContext(StepExecution stepExecution) {
-		ExecutionContext executionContext = stepExecution.getExecutionContext();
+	public void updateStepExecutionContext(final StepExecution stepExecution) {
+		final ExecutionContext executionContext = stepExecution.getExecutionContext();
 		if (executionContext != null) {
 			contexts.put(ContextKey.step(stepExecution.getId()), copy(executionContext));
 		}
 	}
 
 	@Override
-	public ExecutionContext getExecutionContext(JobExecution jobExecution) {
+	public ExecutionContext getJobExecutionContext(final JobExecution jobExecution) {
 		return copy(contexts.get(ContextKey.job(jobExecution.getId())));
 	}
 
 	@Override
-	public void updateExecutionContext(JobExecution jobExecution) {
-		ExecutionContext executionContext = jobExecution.getExecutionContext();
+	public void updateJobExecutionContext(final JobExecution jobExecution) {
+		final ExecutionContext executionContext = jobExecution.getExecutionContext();
 		if (executionContext != null) {
 			contexts.put(ContextKey.job(jobExecution.getId()), copy(executionContext));
 		}
 	}
 
 	@Override
-	public void saveExecutionContext(JobExecution jobExecution) {
-		updateExecutionContext(jobExecution);
+	public void saveJobExecutionContext(final JobExecution jobExecution) {
+		updateJobExecutionContext(jobExecution);
 	}
 
 	@Override
-	public void saveExecutionContext(StepExecution stepExecution) {
-		updateExecutionContext(stepExecution);
+	public void saveStepExecutionContext(final StepExecution stepExecution) {
+		updateStepExecutionContext(stepExecution);
 	}
 
 
 	@Override
-	public void saveExecutionContexts(Collection<StepExecution> stepExecutions) {
+	public void saveStepExecutionContexts(final Collection<StepExecution> stepExecutions) {
 		Assert.notNull(stepExecutions,"Attempt to save a nulk collection of step executions");
-		for (StepExecution stepExecution: stepExecutions) {
-			saveExecutionContext(stepExecution);
-			saveExecutionContext(stepExecution.getJobExecution());
+		for (final StepExecution stepExecution: stepExecutions) {
+			saveStepExecutionContext(stepExecution);
+			saveJobExecutionContext(stepExecution.getJobExecution());
 		}
 	}
 

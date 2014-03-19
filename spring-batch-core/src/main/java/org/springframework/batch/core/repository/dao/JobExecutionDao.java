@@ -19,8 +19,9 @@ package org.springframework.batch.core.repository.dao;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobInstance;
+import javax.batch.runtime.JobInstance;
+
+import org.springframework.batch.core.intf.JobExecution;
 
 /**
  * Data Access Object for job executions.
@@ -28,7 +29,7 @@ import org.springframework.batch.core.JobInstance;
  * @author Lucas Ward
  * @author Robert Kasanicky
  */
-public interface JobExecutionDao<T extends JobExecution, I extends JobInstance> {
+public interface JobExecutionDao<T,I> {
 
 	/**
 	 * Save a new JobExecution.

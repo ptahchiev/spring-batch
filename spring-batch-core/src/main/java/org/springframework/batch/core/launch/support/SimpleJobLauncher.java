@@ -66,7 +66,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 
 	protected static final Log logger = LogFactory.getLog(SimpleJobLauncher.class);
 
-	private JobRepository jobRepository;
+	private JobRepository<JobExecution, JobInstance, StepExecution> jobRepository;
 
 	private TaskExecutor taskExecutor;
 
@@ -95,7 +95,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 		Assert.notNull(jobParameters, "The JobParameters must not be null.");
 
 		final JobExecution jobExecution;
-		JobExecution lastExecution = jobRepository.getLastJobExecution(job.getName(), jobParameters);
+		final JobExecution lastExecution = jobRepository.getLastJobExecution(job.getName(), jobParameters);
 		if (lastExecution != null) {
 			if (!job.isRestartable()) {
 				throw new JobRestartException("JobInstance already exists and is not restartable");
@@ -104,7 +104,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 			 * validate here if it has stepExecutions that are UNKNOWN
 			 * retrieve the previous execution and check
 			 */
-			for (StepExecution execution : lastExecution.getStepExecutions()) {
+			for (final StepExecution execution : lastExecution.getStepExecutions()) {
 				if (execution.getStatus() == BatchStatus.UNKNOWN) {
 					//throw
 					throw new JobRestartException("Step [" + execution.getStepName() + "] is of status UNKNOWN");
@@ -136,7 +136,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 						logger.info("Job: [" + job + "] completed with the following parameters: [" + jobParameters
 								+ "] and the following status: [" + jobExecution.getStatus() + "]");
 					}
-					catch (Throwable t) {
+					catch (final Throwable t) {
 						logger.info("Job: [" + job
 								+ "] failed unexpectedly and fatally with the following parameters: [" + jobParameters
 								+ "]", t);
@@ -144,7 +144,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 					}
 				}
 
-				private void rethrow(Throwable t) {
+				private void rethrow(final Throwable t) {
 					if (t instanceof RuntimeException) {
 						throw (RuntimeException) t;
 					}
@@ -155,7 +155,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 				}
 			});
 		}
-		catch (TaskRejectedException e) {
+		catch (final TaskRejectedException e) {
 			jobExecution.upgradeStatus(BatchStatus.FAILED);
 			if (jobExecution.getExitStatus().equals(ExitStatus.UNKNOWN)) {
 				jobExecution.setExitStatus(ExitStatus.FAILED.addExitDescription(e));
@@ -171,7 +171,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 	 *
 	 * @param jobRepository
 	 */
-	public void setJobRepository(JobRepository jobRepository) {
+	public void setJobRepository(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
 		this.jobRepository = jobRepository;
 	}
 
@@ -180,7 +180,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 	 *
 	 * @param taskExecutor
 	 */
-	public void setTaskExecutor(TaskExecutor taskExecutor) {
+	public void setTaskExecutor(final TaskExecutor taskExecutor) {
 		this.taskExecutor = taskExecutor;
 	}
 
