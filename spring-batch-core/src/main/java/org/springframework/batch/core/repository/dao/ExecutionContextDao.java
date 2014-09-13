@@ -26,19 +26,19 @@ import org.springframework.batch.item.ExecutionContext;
  * @author Robert Kasanicky
  * @author David Turanski
  */
-public interface ExecutionContextDao<JE, SE> {
+public interface ExecutionContextDao<JE, SE, EC> {
 
 	/**
 	 * @param jobExecution
 	 * @return execution context associated with the given jobExecution
 	 */
-	ExecutionContext getJobExecutionContext(JE jobExecution);
+	EC getJobExecutionContext(JE jobExecution);
 
 	/**
 	 * @param stepExecution
 	 * @return execution context associated with the given stepExecution
 	 */
-	ExecutionContext getStepExecutionContext(SE stepExecution);
+	EC getStepExecutionContext(SE stepExecution);
 
 	/**
 	 * Persist the execution context associated with the given jobExecution,

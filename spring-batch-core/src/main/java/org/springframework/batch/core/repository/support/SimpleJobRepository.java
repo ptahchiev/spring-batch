@@ -19,10 +19,10 @@ package org.springframework.batch.core.repository.support;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.intf.JobExecution;
+import org.springframework.batch.core.intf.StepExecution;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRepository;
@@ -57,17 +57,18 @@ import java.util.List;
  * @see StepExecutionDao
  *
  */
-public class SimpleJobRepository implements JobRepository {
+public class SimpleJobRepository<JE extends JobExecution<I, SE, EC>, I extends JobInstance, SE extends StepExecution<JE, EC>, EC extends ExecutionContext> implements JobRepository<JE, I, SE> {
 
 	private static final Log logger = LogFactory.getLog(SimpleJobRepository.class);
 
-	private JobInstanceDao jobInstanceDao;
+    private JobInstanceDao<I> jobInstanceDao;
 
-	private JobExecutionDao jobExecutionDao;
+    private JobExecutionDao<JE, I> jobExecutionDao;
 
-	private StepExecutionDao stepExecutionDao;
+    private StepExecutionDao<SE, JE> stepExecutionDao;
 
-	private ExecutionContextDao ecDao;
+    private ExecutionContextDao<JE, SE, EC> ecDao;
+
 
 	/**
 	 * Provide default constructor with low visibility in case user wants to use
@@ -91,7 +92,7 @@ public class SimpleJobRepository implements JobRepository {
 	}
 
 	@Override
-	public JobExecution createJobExecution(String jobName, JobParameters jobParameters)
+	public JE createJobExecution(String jobName, JobParameters jobParameters)
 			throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
 
 		Assert.notNull(jobName, "Job name must not be null.");
@@ -112,10 +113,10 @@ public class SimpleJobRepository implements JobRepository {
 		// existing job instance found
 		if (jobInstance != null) {
 
-			List<JobExecution> executions = jobExecutionDao.findJobExecutions(jobInstance);
+			List<JE> executions = jobExecutionDao.findJobExecutions(jobInstance);
 
 			// check for running executions and find the last started
-			for (JobExecution execution : executions) {
+			for (JE execution : executions) {
 				if (execution.isRunning()) {
 					throw new JobExecutionAlreadyRunningException("A job execution for this job is already running: "
 							+ jobInstance);
@@ -136,7 +137,7 @@ public class SimpleJobRepository implements JobRepository {
 			executionContext = new ExecutionContext();
 		}
 
-		JobExecution jobExecution = new JobExecution(jobInstance, jobParameters, null);
+		JE jobExecution = new JobExecution(jobInstance, jobParameters, null);
 		jobExecution.setExecutionContext(executionContext);
 		jobExecution.setLastUpdated(new Date(System.currentTimeMillis()));
 
@@ -150,7 +151,7 @@ public class SimpleJobRepository implements JobRepository {
 	}
 
 	@Override
-	public void update(JobExecution jobExecution) {
+	public void update(JE jobExecution) {
 
 		Assert.notNull(jobExecution, "JobExecution cannot be null.");
 		Assert.notNull(jobExecution.getJobId(), "JobExecution must have a Job ID set.");
@@ -296,17 +297,17 @@ public class SimpleJobRepository implements JobRepository {
 	}
 
 	@Override
-	public JobInstance createJobInstance(String jobName, JobParameters jobParameters) {
+	public JI createJobInstance(String jobName, JobParameters jobParameters) {
 		Assert.notNull(jobName, "A job name is required to create a JobInstance");
 		Assert.notNull(jobParameters, "Job parameters are required to create a JobInstance");
 
-		JobInstance jobInstance = jobInstanceDao.createJobInstance(jobName, jobParameters);
+		I jobInstance = jobInstanceDao.createJobInstance(jobName, jobParameters);
 
 		return jobInstance;
 	}
 
 	@Override
-	public JobExecution createJobExecution(JobInstance jobInstance,
+	public JE createJobExecution(JobInstance jobInstance,
 			JobParameters jobParameters, String jobConfigurationLocation) {
 
 		Assert.notNull(jobInstance, "A JobInstance is required to associate the JobExecution with");

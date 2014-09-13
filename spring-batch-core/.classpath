@@ -1,97 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-  <classpathentry kind="src" path="src/test/java" output="target/test-classes" including="**/*.java"/>
-  <classpathentry kind="src" path="src/test/resources" output="target/test-classes" excluding="**/*.java"/>
-  <classpathentry kind="src" path="src/main/java" including="**/*.java"/>
-  <classpathentry kind="src" path="src/main/resources" excluding="**/*.java"/>
-  <classpathentry kind="output" path="target/classes"/>
-  <classpathentry kind="var" path="M2_REPO/javax/batch/javax.batch-api/1.0/javax.batch-api-1.0.jar"/>
-  <classpathentry kind="var" path="M2_REPO/javax/inject/javax.inject/1/javax.inject-1.jar" sourcepath="M2_REPO/javax/inject/javax.inject/1/javax.inject-1-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/javax/inject/javax.inject/1/javax.inject-1-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-  <classpathentry kind="src" path="/spring-batch-infrastructure"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-core/3.2.7.RELEASE/spring-core-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar" sourcepath="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/retry/spring-retry/1.0.2.RELEASE/spring-retry-1.0.2.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-context/3.2.7.RELEASE/spring-context-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-aop/3.2.7.RELEASE/spring-aop-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0.jar" sourcepath="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/aopalliance/aopalliance/1.0/aopalliance-1.0-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-beans/3.2.7.RELEASE/spring-beans-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-expression/3.2.7.RELEASE/spring-expression-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/ibm/jbatch/com.ibm.jbatch-tck-spi/1.0/com.ibm.jbatch-tck-spi-1.0.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/hsqldb/hsqldb/2.3.1/hsqldb-2.3.1.jar" sourcepath="M2_REPO/org/hsqldb/hsqldb/2.3.1/hsqldb-2.3.1-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/org/hsqldb/hsqldb/2.3.1/hsqldb-2.3.1-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/com/h2database/h2/1.2.125/h2-1.2.125.jar"/>
-  <classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.4/commons-io-1.4.jar" sourcepath="M2_REPO/commons-io/commons-io/1.4/commons-io-1.4-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/commons-io/commons-io/1.4/commons-io-1.4-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/commons-dbcp/commons-dbcp/1.2.2/commons-dbcp-1.2.2.jar" sourcepath="M2_REPO/commons-dbcp/commons-dbcp/1.2.2/commons-dbcp-1.2.2-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/commons-dbcp/commons-dbcp/1.2.2/commons-dbcp-1.2.2-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/commons-pool/commons-pool/1.3/commons-pool-1.3.jar"/>
-  <classpathentry kind="var" path="M2_REPO/junit/junit/4.10/junit-4.10.jar" sourcepath="M2_REPO/junit/junit/4.10/junit-4.10-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/junit/junit/4.10/junit-4.10-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1.jar" sourcepath="M2_REPO/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1-sources.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/aspectj/aspectjrt/1.5.4/aspectjrt-1.5.4.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/aspectj/aspectjweaver/1.5.4/aspectjweaver-1.5.4.jar"/>
-  <classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar" sourcepath="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3-sources.jar"/>
-  <classpathentry kind="var" path="M2_REPO/com/thoughtworks/xstream/xstream/1.4.4/xstream-1.4.4.jar"/>
-  <classpathentry kind="var" path="M2_REPO/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1.jar" sourcepath="M2_REPO/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c.jar" sourcepath="M2_REPO/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/org/codehaus/jettison/jettison/1.2/jettison-1.2.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/osgi/osgi_R4_core/1.0/osgi_R4_core-1.0.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-jdbc/3.2.7.RELEASE/spring-jdbc-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-tx/3.2.7.RELEASE/spring-tx-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/data/spring-data-jpa/1.5.0.BUILD-SNAPSHOT/spring-data-jpa-1.5.0.BUILD-SNAPSHOT.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/data/spring-data-commons/1.5.0.RELEASE/spring-data-commons-1.5.0.RELEASE.jar" sourcepath="M2_REPO/org/springframework/data/spring-data-commons/1.5.0.RELEASE/spring-data-commons-1.5.0.RELEASE-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/org/springframework/data/spring-data-commons/1.5.0.RELEASE/spring-data-commons-1.5.0.RELEASE-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.6.6/slf4j-api-1.6.6.jar" sourcepath="M2_REPO/org/slf4j/slf4j-api/1.6.6/slf4j-api-1.6.6-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/org/slf4j/slf4j-api/1.6.6/slf4j-api-1.6.6-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/org/slf4j/jcl-over-slf4j/1.7.6/jcl-over-slf4j-1.7.6.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-orm/3.2.7.RELEASE/spring-orm-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/osgi/spring-osgi-core/1.1.2/spring-osgi-core-1.1.2.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/osgi/spring-osgi-io/1.1.2/spring-osgi-io-1.1.2.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/springframework/spring-test/3.2.7.RELEASE/spring-test-3.2.7.RELEASE.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-log4j12/1.6.6/slf4j-log4j12-1.6.6.jar"/>
-  <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.14/log4j-1.2.14.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.jar" sourcepath="M2_REPO/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/home/petar/.m2/repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
+	<classpathentry including="**/*.java" output="target/test-classes" kind="src" path="src/test/java"/>
+	<classpathentry excluding="**/*.java" output="target/test-classes" kind="src" path="src/test/resources"/>
+	<classpathentry including="**/*.java" kind="src" path="src/main/java"/>
+	<classpathentry excluding="**/*.java" kind="src" path="src/main/resources"/>
+	<classpathentry kind="output" path="target/classes"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="output" path="bin"/>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/main/resources"/>
+	<classpathentry kind="src" path="src/test/java"/>
+	<classpathentry kind="src" path="src/test/resources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER" exported="true"/>
+	<classpathentry kind="src" path="/spring-batch-infrastructure" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/com.ibm.jbatch/com.ibm.jbatch-tck-spi/1.0/d0d9dfa266ccf85d8384267b078881b8c4567626/com.ibm.jbatch-tck-spi-1.0-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/com.ibm.jbatch/com.ibm.jbatch-tck-spi/1.0/8ac869b0a60bff1a15eba0fb6398942410396938/com.ibm.jbatch-tck-spi-1.0.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/com.thoughtworks.xstream/xstream/1.4.7/5db922f39e8bd8af65d4c4a9471fd94771e273d7/xstream-1.4.7-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/com.thoughtworks.xstream/xstream/1.4.7/bce3282142b63068260f021fcbe48b72e8d71a1a/xstream-1.4.7.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.codehaus.jettison/jettison/1.2/19b77eec2c68c40e35e569f4c86ae23c52d7cc6b/jettison-1.2-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.codehaus.jettison/jettison/1.2/765a6181653f4b05c18c7a9e8f5c1f8269bf9b2/jettison-1.2.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/4.0.5.RELEASE/2d8ec0d3a074b4a193c16312ab2cda105d87871f/spring-aop-4.0.5.RELEASE-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/4.0.5.RELEASE/d22abbbba78f7c8854fc39346cc99362272c5c90/spring-aop-4.0.5.RELEASE.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/4.0.5.RELEASE/589675b60574e292b76f8ef3bf36bec72a979e45/spring-beans-4.0.5.RELEASE-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-beans/4.0.5.RELEASE/11e00022f109653ee0dbe16b59c26e19bd90fa08/spring-beans-4.0.5.RELEASE.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-context/4.0.5.RELEASE/aadd509610ea91906c177c33c22dd7e28df3b66/spring-context-4.0.5.RELEASE-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-context/4.0.5.RELEASE/98cd9a4b8bb0c695c0cfcc204cf804f433851cfe/spring-context-4.0.5.RELEASE.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-core/4.0.5.RELEASE/c8ccd8ae8bb85f917ef429d3cad37b1b36c92c49/spring-core-4.0.5.RELEASE-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-core/4.0.5.RELEASE/cce94116431b5a1384d58316a4090bbe7718fd5a/spring-core-4.0.5.RELEASE.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-tx/4.0.5.RELEASE/a1334d0da26cd44f3930c8930be786cb13e8e9ec/spring-tx-4.0.5.RELEASE-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-tx/4.0.5.RELEASE/bc94807ffcf9a6934428eb7ecdf9c37c41dd95a1/spring-tx-4.0.5.RELEASE.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.aspectj/aspectjrt/1.8.0/6922ad7eed511396a245f8e05aeacfdfeaacfaaf/aspectjrt-1.8.0-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.aspectj/aspectjrt/1.8.0/302d0fe0abba26bbf5f31c3cd5337b3125c744e3/aspectjrt-1.8.0.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.aspectj/aspectjweaver/1.8.0/64bbbc88290ace62f1a036d73579c70414560987/aspectjweaver-1.8.0-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.aspectj/aspectjweaver/1.8.0/57ff384193755a8f2666d59fd9c718cdbdd550f4/aspectjweaver-1.8.0.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-jdbc/4.0.5.RELEASE/74b483ae51c2645ef78c15103aaf5bf655c02c5a/spring-jdbc-4.0.5.RELEASE-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-jdbc/4.0.5.RELEASE/464e18d797ef5f2f19e6b8c151ca0b196c806ad3/spring-jdbc-4.0.5.RELEASE.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-log4j12/1.7.7/8b4cb18ba8eb2d71cd2cd630266136e8271d270d/slf4j-log4j12-1.7.7-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-log4j12/1.7.7/58f588119ffd1702c77ccab6acb54bfb41bed8bd/slf4j-log4j12-1.7.7.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.17/677abe279b68c5e7490d6d50c6951376238d7d3e/log4j-1.2.17-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.17/5af35056b4d257e4b64b9e8069c0746e8b08629f/log4j-1.2.17.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/javax.batch/javax.batch-api/1.0/fdde8fdbf88afaa185558c711bd5cd6dfdd459f9/javax.batch-api-1.0-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/javax.batch/javax.batch-api/1.0/65392d027a6eb369fd9fcd1b75cae150e25ac03c/javax.batch-api-1.0.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-test/4.0.5.RELEASE/846537e521fd4e883d0072245960e4f1f91c187a/spring-test-4.0.5.RELEASE-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-test/4.0.5.RELEASE/caa3ead3ab38ecaa979ec7054fdfc1b73d36f916/spring-test-4.0.5.RELEASE.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.mockito/mockito-core/1.9.5/46f703fb4266140c544d48a189cb25947eb6333e/mockito-core-1.9.5-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.mockito/mockito-core/1.9.5/c3264abeea62c4d2f367e21484fbb40c7e256393/mockito-core-1.9.5.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/a00123f261762a7c5e0ec916a2c7c8298d29c400/javax.inject-1-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.hsqldb/hsqldb/2.3.2/cf894383ae9ef2bb09bc9e02a9dd25cc8251761/hsqldb-2.3.2-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.hsqldb/hsqldb/2.3.2/970fd7b8f635e2c19305160459649569655b843c/hsqldb-2.3.2.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/com.h2database/h2/1.3.175/fc4555925945f7fb3153a4ca3d94d34d3f33b713/h2-1.3.175-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/com.h2database/h2/1.3.175/408ed316edddbce6db031c6bdceee73a09647d9e/h2-1.3.175.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.4/f2d8698c46d1167ff24b06a840a87d91a02db891/commons-io-2.4-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.4/b1b6ea3b7e4aa4f492509a4952029cd8e48019ad/commons-io-2.4.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/commons-dbcp/commons-dbcp/1.4/9b076ff231434d5403be6599a1347019b12c0def/commons-dbcp-1.4-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/commons-dbcp/commons-dbcp/1.4/30be73c965cc990b153a100aaaaafcf239f82d39/commons-dbcp-1.4.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/junit/junit/4.11/28e0ad201304e4a4abf999ca0570b7cffc352c3c/junit-4.11-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/junit/junit/4.11/4e031bb61df09069aeb2bffb4019e7a5034a4ee0/junit-4.11.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-all/1.3/47e033b7ab18c5dbd5fe29fc1bd5a40afe028818/hamcrest-all-1.3-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-all/1.3/63a21ebc981131004ad02e0434e799fd7f3a8d5a/hamcrest-all-1.3.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/xmlpull/xmlpull/1.1.3.1/da39a3ee5e6b4b0d3255bfef95601890afd80709/xmlpull-1.1.3.1-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/xmlpull/xmlpull/1.1.3.1/2b8e230d2ab644e4ecaa94db7cdedbc40c805dfa/xmlpull-1.1.3.1.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/xpp3/xpp3_min/1.1.4c/fffe25ec1f20ec1cfdc0edd41c6e0d55bc0dbaf5/xpp3_min-1.1.4c-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/xpp3/xpp3_min/1.1.4c/19d4e90b43059058f6e056f794f0ea4030d60b86/xpp3_min-1.1.4c.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/aopalliance/aopalliance/1.0/4a4b6d692e17846a9f3da036438a7ac491d3c814/aopalliance-1.0-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/aopalliance/aopalliance/1.0/235ba8b489512805ac13a8f9ea77a1ca5ebe3e8/aopalliance-1.0.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.1.3/28bb0405fddaf04f15058fbfbe01fe2780d7d3b6/commons-logging-1.1.3-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.1.3/f6f66e966c70a83ffbdb6f17a0919eaf7c8aca7f/commons-logging-1.1.3.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-expression/4.0.5.RELEASE/11f705f4d73aa2f074d32602fd6a80898fd50257/spring-expression-4.0.5.RELEASE-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.springframework/spring-expression/4.0.5.RELEASE/d7ddbc320c31c15cb3612ed64607e181c3b2d851/spring-expression-4.0.5.RELEASE.jar" exported="true"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.7/acd62e31cc314266e73eebed0b6dd7ea974a0ed/slf4j-api-1.7.7-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.7/2b8019b6249bb05d81d3a3094e468753e2b21311/slf4j-api-1.7.7.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.objenesis/objenesis/1.0/b10c90e57b7bb985a7b6a704769428fe5c2a732c/objenesis-1.0-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/org.objenesis/objenesis/1.0/9b473564e792c2bdf1449da1f0b1b5bff9805704/objenesis-1.0.jar"/>
+	<classpathentry sourcepath="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/commons-pool/commons-pool/1.5.4/3e226507788e09f02eef641e868624fb823af6e6/commons-pool-1.5.4-sources.jar" kind="lib" path="C:/Users/Petar/.gradle/caches/modules-2/files-2.1/commons-pool/commons-pool/1.5.4/75b6e20c596ed2945a259cea26d7fadd298398e6/commons-pool-1.5.4.jar"/>
 </classpath>

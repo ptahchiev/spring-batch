@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-  <name>spring-batch-core</name>
-  <comment>Core domain for batch processing, expressing a domain of Jobs, Steps, Chunks, etc. NO_M2ECLIPSE_SUPPORT: Project files created with the maven-eclipse-plugin are not supported in M2Eclipse.</comment>
-  <projects>
-    <project>spring-batch-infrastructure</project>
-  </projects>
-  <buildSpec>
-    <buildCommand>
-      <name>org.eclipse.jdt.core.javabuilder</name>
-    </buildCommand>
-  </buildSpec>
-  <natures>
-    <nature>org.eclipse.jdt.core.javanature</nature>
-  </natures>
+	<name>spring-batch-core</name>
+	<comment>Spring Batch Core</comment>
+	<projects>
+		<project>spring-batch-infrastructure</project>
+	</projects>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+		<nature>org.springframework.ide.eclipse.core.springnature</nature>
+	</natures>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments/>
+		</buildCommand>
+	</buildSpec>
+	<linkedResources/>
 </projectDescription>

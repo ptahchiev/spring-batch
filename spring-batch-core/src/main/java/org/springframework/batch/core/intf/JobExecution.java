@@ -5,7 +5,7 @@ import java.util.Collection;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobParameters;
 
-public interface JobExecution<JI, SE> {
+public interface JobExecution<JI, SE, EC> extends Entity {
     
     JI getJobInstance();
     

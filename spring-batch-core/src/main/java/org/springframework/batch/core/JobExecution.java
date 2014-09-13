@@ -16,8 +16,6 @@
 
 package org.springframework.batch.core;
 
-import org.springframework.batch.item.ExecutionContext;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
@@ -30,6 +28,8 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.springframework.batch.item.ExecutionContext;
+
 /**
  * Batch domain object representing the execution of a job.
  *
@@ -38,7 +38,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  *
  */
 @SuppressWarnings("serial")
-public class JobExecution extends Entity implements org.springframework.batch.core.intf.JobExecution<JobInstance, StepExecution> {
+public class JobExecution extends Entity implements org.springframework.batch.core.intf.JobExecution<JobInstance, StepExecution, ExecutionContext> {
 
 	private final JobParameters jobParameters;
 
@@ -64,7 +64,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 
 	private final String jobConfigurationName;
 
-	public JobExecution(final JobExecution original) {
+	public JobExecution(JobExecution original) {
 		this.jobParameters = original.getJobParameters();
 		this.jobInstance = original.getJobInstance();
 		this.stepExecutions = original.getStepExecutions();
@@ -87,18 +87,18 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 *
 	 * @param job the job of which this execution is a part
 	 */
-	public JobExecution(final JobInstance job, final Long id, final JobParameters jobParameters, final String jobConfigurationName) {
+	public JobExecution(JobInstance job, Long id, JobParameters jobParameters, String jobConfigurationName) {
 		super(id);
 		this.jobInstance = job;
 		this.jobParameters = jobParameters == null ? new JobParameters() : jobParameters;
 		this.jobConfigurationName = jobConfigurationName;
 	}
 
-	public JobExecution(final JobInstance job, final JobParameters jobParameters, final String jobConfigurationName) {
+	public JobExecution(JobInstance job, JobParameters jobParameters, String jobConfigurationName) {
 		this(job, null, jobParameters, jobConfigurationName);
 	}
 
-	public JobExecution(final Long id, final JobParameters jobParameters, final String jobConfigurationName) {
+	public JobExecution(Long id, JobParameters jobParameters, String jobConfigurationName) {
 		this(null, id, jobParameters, jobConfigurationName);
 	}
 
@@ -107,15 +107,15 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 *
 	 * @param job the enclosing {@link JobInstance}
 	 */
-	public JobExecution(final JobInstance job, final JobParameters jobParameters) {
+	public JobExecution(JobInstance job, JobParameters jobParameters) {
 		this(job, null, jobParameters, null);
 	}
 
-	public JobExecution(final Long id, final JobParameters jobParameters) {
+	public JobExecution(Long id, JobParameters jobParameters) {
 		this(null, id, jobParameters, null);
 	}
 
-	public JobExecution(final Long id) {
+	public JobExecution(Long id) {
 		this(null, id, null, null);
 	}
 
@@ -127,11 +127,11 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 		return endTime;
 	}
 
-	public void setJobInstance(final JobInstance jobInstance) {
+	public void setJobInstance(JobInstance jobInstance) {
 		this.jobInstance = jobInstance;
 	}
 
-	public void setEndTime(final Date endTime) {
+	public void setEndTime(Date endTime) {
 		this.endTime = endTime;
 	}
 
@@ -139,7 +139,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 		return startTime;
 	}
 
-	public void setStartTime(final Date startTime) {
+	public void setStartTime(Date startTime) {
 		this.startTime = startTime;
 	}
 
@@ -152,7 +152,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 *
 	 * @param status the status to set
 	 */
-	public void setStatus(final BatchStatus status) {
+	public void setStatus(BatchStatus status) {
 		this.status = status;
 	}
 
@@ -163,7 +163,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 *
 	 * @param status the new status value
 	 */
-	public void upgradeStatus(final BatchStatus status) {
+	public void upgradeStatus(BatchStatus status) {
 		this.status = this.status.upgradeTo(status);
 	}
 
@@ -183,7 +183,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	/**
 	 * @param exitStatus
 	 */
-	public void setExitStatus(final ExitStatus exitStatus) {
+	public void setExitStatus(ExitStatus exitStatus) {
 		this.exitStatus = exitStatus;
 	}
 
@@ -246,7 +246,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 *
 	 */
 	public void stop() {
-		for (final StepExecution stepExecution : stepExecutions) {
+		for (StepExecution stepExecution : stepExecutions) {
 			stepExecution.setTerminateOnly();
 		}
 		status = BatchStatus.STOPPING;
@@ -281,7 +281,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	/**
 	 * @param createTime creation time of this execution.
 	 */
-	public void setCreateTime(final Date createTime) {
+	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
 
@@ -294,7 +294,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 * existing instances.
 	 * @param stepExecution
 	 */
-	void addStepExecution(final StepExecution stepExecution) {
+	void addStepExecution(StepExecution stepExecution) {
 		stepExecutions.add(stepExecution);
 	}
 
@@ -313,7 +313,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 *
 	 * @param lastUpdated
 	 */
-	public void setLastUpdated(final Date lastUpdated) {
+	public void setLastUpdated(Date lastUpdated) {
 		this.lastUpdated = lastUpdated;
 	}
 
@@ -326,7 +326,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 *
 	 * @param t
 	 */
-	public synchronized void addFailureException(final Throwable t) {
+	public synchronized void addFailureException(Throwable t) {
 		this.failureExceptions.add(t);
 	}
 
@@ -339,8 +339,8 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 */
 	public synchronized List<Throwable> getAllFailureExceptions() {
 
-		final Set<Throwable> allExceptions = new HashSet<Throwable>(failureExceptions);
-		for (final StepExecution stepExecution : stepExecutions) {
+		Set<Throwable> allExceptions = new HashSet<Throwable>(failureExceptions);
+		for (StepExecution stepExecution : stepExecutions) {
 			allExceptions.addAll(stepExecution.getFailureExceptions());
 		}
 
@@ -351,7 +351,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 * Deserialize and ensure transient fields are re-instantiated when read
 	 * back
 	 */
-	private void readObject(final ObjectInputStream stream) throws IOException, ClassNotFoundException {
+	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
 		stream.defaultReadObject();
 		failureExceptions = new ArrayList<Throwable>();
 	}
@@ -372,7 +372,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 * Add some step executions.  For internal use only.
 	 * @param stepExecutions step executions to add to the current list
 	 */
-	public void addStepExecutions(final List<StepExecution> stepExecutions) {
+	public void addStepExecutions(List<StepExecution> stepExecutions) {
 		if (stepExecutions!=null) {
 			this.stepExecutions.removeAll(stepExecutions);
 			this.stepExecutions.addAll(stepExecutions);
