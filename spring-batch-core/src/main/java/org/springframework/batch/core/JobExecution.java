@@ -215,8 +215,8 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 * Register a step execution with the current job execution.
 	 * @param stepName the name of the step the new execution is associated with
 	 */
-	public StepExecution createStepExecution(final String stepName) {
-		final StepExecution stepExecution = new StepExecution(stepName, this);
+	public StepExecution createStepExecution(String stepName) {
+		StepExecution stepExecution = new StepExecution(stepName, this);
 		this.stepExecutions.add(stepExecution);
 		return stepExecution;
 	}
@@ -257,7 +257,7 @@ public class JobExecution extends Entity implements org.springframework.batch.co
 	 *
 	 * @param executionContext the context
 	 */
-	public void setExecutionContext(final ExecutionContext executionContext) {
+	public void setExecutionContext(ExecutionContext executionContext) {
 		this.executionContext = executionContext;
 	}
 
