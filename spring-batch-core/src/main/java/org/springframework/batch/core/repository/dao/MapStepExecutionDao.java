@@ -38,18 +38,18 @@ import org.springframework.util.SerializationUtils;
  */
 public class MapStepExecutionDao implements StepExecutionDao<StepExecution, JobExecution> {
 
-	private final Map<Long, Map<Long, StepExecution>> executionsByJobExecutionId = new ConcurrentHashMap<Long, Map<Long,StepExecution>>();
+	private Map<Long, Map<Long, StepExecution>> executionsByJobExecutionId = new ConcurrentHashMap<Long, Map<Long,StepExecution>>();
 
-	private final Map<Long, StepExecution> executionsByStepExecutionId = new ConcurrentHashMap<Long, StepExecution>();
+	private Map<Long, StepExecution> executionsByStepExecutionId = new ConcurrentHashMap<Long, StepExecution>();
 
-	private final AtomicLong currentId = new AtomicLong();
+	private AtomicLong currentId = new AtomicLong();
 
 	public void clear() {
 		executionsByJobExecutionId.clear();
 		executionsByStepExecutionId.clear();
 	}
 
-	private static StepExecution copy(final StepExecution original) {
+	private static StepExecution copy(StepExecution original) {
 		return (StepExecution) SerializationUtils.deserialize(SerializationUtils.serialize(original));
 	}
 
@@ -58,7 +58,7 @@ public class MapStepExecutionDao implements StepExecutionDao<StepExecution, JobE
 		// fine for volatile storage
 		ReflectionUtils.doWithFields(StepExecution.class, new ReflectionUtils.FieldCallback() {
 			@Override
-			public void doWith(final Field field) throws IllegalArgumentException, IllegalAccessException {
+			public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
 				field.setAccessible(true);
 				field.set(targetExecution, field.get(sourceExecution));
 			}
@@ -66,7 +66,7 @@ public class MapStepExecutionDao implements StepExecutionDao<StepExecution, JobE
 	}
 
 	@Override
-	public void saveStepExecution(final StepExecution stepExecution) {
+	public void saveStepExecution(StepExecution stepExecution) {
 
 		Assert.isTrue(stepExecution.getId() == null);
 		Assert.isTrue(stepExecution.getVersion() == null);
@@ -80,21 +80,21 @@ public class MapStepExecutionDao implements StepExecutionDao<StepExecution, JobE
 
 		stepExecution.setId(currentId.incrementAndGet());
 		stepExecution.incrementVersion();
-		final StepExecution copy = copy(stepExecution);
+		StepExecution copy = copy(stepExecution);
 		executions.put(stepExecution.getId(), copy);
 		executionsByStepExecutionId.put(stepExecution.getId(), copy);
 
 	}
 
 	@Override
-	public void updateStepExecution(final StepExecution stepExecution) {
+	public void updateStepExecution(StepExecution stepExecution) {
 
 		Assert.notNull(stepExecution.getJobExecutionId());
 
-		final Map<Long, StepExecution> executions = executionsByJobExecutionId.get(stepExecution.getJobExecutionId());
+		Map<Long, StepExecution> executions = executionsByJobExecutionId.get(stepExecution.getJobExecutionId());
 		Assert.notNull(executions, "step executions for given job execution are expected to be already saved");
 
-		final StepExecution persistedExecution = executionsByStepExecutionId.get(stepExecution.getId());
+		StepExecution persistedExecution = executionsByStepExecutionId.get(stepExecution.getId());
 		Assert.notNull(persistedExecution, "step execution is expected to be already saved");
 
 		synchronized (stepExecution) {
@@ -105,7 +105,7 @@ public class MapStepExecutionDao implements StepExecutionDao<StepExecution, JobE
 			}
 
 			stepExecution.incrementVersion();
-			final StepExecution copy = new StepExecution(stepExecution.getStepName(), stepExecution.getJobExecution());
+			StepExecution copy = new StepExecution(stepExecution.getStepName(), stepExecution.getJobExecution());
 			copy(stepExecution, copy);
 			executions.put(stepExecution.getId(), copy);
 			executionsByStepExecutionId.put(stepExecution.getId(), copy);
@@ -113,36 +113,36 @@ public class MapStepExecutionDao implements StepExecutionDao<StepExecution, JobE
 	}
 
 	@Override
-	public StepExecution getStepExecution(final JobExecution jobExecution, final Long stepExecutionId) {
+	public StepExecution getStepExecution(JobExecution jobExecution, Long stepExecutionId) {
 		return executionsByStepExecutionId.get(stepExecutionId);
 	}
 
 	@Override
-	public void addStepExecutions(final JobExecution jobExecution) {
-		final Map<Long, StepExecution> executions = executionsByJobExecutionId.get(jobExecution.getId());
+	public void addStepExecutions(JobExecution jobExecution) {
+		Map<Long, StepExecution> executions = executionsByJobExecutionId.get(jobExecution.getId());
 		if (executions == null || executions.isEmpty()) {
 			return;
 		}
-		final List<StepExecution> result = new ArrayList<StepExecution>(executions.values());
+		List<StepExecution> result = new ArrayList<StepExecution>(executions.values());
 		Collections.sort(result, new Comparator<Entity>() {
 
 			@Override
-			public int compare(final Entity o1, final Entity o2) {
+			public int compare(Entity o1, Entity o2) {
 				return Long.signum(o2.getId() - o1.getId());
 			}
 		});
 
-		final List<StepExecution> copy = new ArrayList<StepExecution>(result.size());
-		for (final StepExecution exec : result) {
+		List<StepExecution> copy = new ArrayList<StepExecution>(result.size());
+		for (StepExecution exec : result) {
 			copy.add(copy(exec));
 		}
 		jobExecution.addStepExecutions(copy);
 	}
 
 	@Override
-	public void saveStepExecutions(final Collection<StepExecution> stepExecutions) {
+	public void saveStepExecutions(Collection<StepExecution> stepExecutions) {
 		Assert.notNull(stepExecutions,"Attempt to save an null collect of step executions");
-		for (final StepExecution stepExecution: stepExecutions) {
+		for (StepExecution stepExecution: stepExecutions) {
 			saveStepExecution(stepExecution);
 		}
 	}
