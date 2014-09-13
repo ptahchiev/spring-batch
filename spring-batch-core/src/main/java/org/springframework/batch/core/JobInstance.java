@@ -39,11 +39,11 @@ import org.springframework.util.Assert;
  *
  */
 @SuppressWarnings("serial")
-public class JobInstance extends Entity implements javax.batch.runtime.JobInstance {
+public class JobInstance extends Entity implements javax.batch.runtime.JobInstance{
 
 	private final String jobName;
 
-	public JobInstance(final Long id, final String jobName) {
+	public JobInstance(Long id, String jobName) {
 		super(id);
 		Assert.hasLength(jobName);
 		this.jobName = jobName;
