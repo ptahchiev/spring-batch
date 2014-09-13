@@ -29,7 +29,7 @@ import org.springframework.batch.core.intf.JobExecution;
  * @author Lucas Ward
  * @author Robert Kasanicky
  */
-public interface JobExecutionDao<T,I> {
+public interface JobExecutionDao<JE, I> {
 
 	/**
 	 * Save a new JobExecution.
@@ -39,13 +39,13 @@ public interface JobExecutionDao<T,I> {
 	 * 
 	 * @param jobExecution
 	 */
-	void save(T jobExecution);
+	void save(JE jobExecution);
 
 	/**
 	 * Return all {@link JobExecution} for given {@link JobInstance}, sorted
 	 * backwards by creation order (so the first element is the most recent).
 	 */
-	List<T> findAllByJobInstance(I jobInstance);
+	List<JE> findAllByJobInstance(I jobInstance);
 
 	/**
 	 * Find the last {@link JobExecution} to have been created for a given
@@ -53,18 +53,18 @@ public interface JobExecutionDao<T,I> {
 	 * @param jobInstance the {@link JobInstance}
 	 * @return the last {@link JobExecution} to execute for this instance
 	 */
-	T findByJobInstanceOrderByJobExecutionIdAsc(I jobInstance);
+	JE findByJobInstanceOrderByJobExecutionIdAsc(I jobInstance);
 
 	/**
 	 * @return all {@link JobExecution} that are still running (or indeterminate
 	 * state), i.e. having null end date, for the specified job name.
 	 */
-	Set<T> findByJobNameAndEndTimeIsNullOrderByJobExecutionId(String jobName);
+	Set<JE> findByJobNameAndEndTimeIsNullOrderByJobExecutionId(String jobName);
 
 	/**
 	 * @return the {@link JobExecution} for given identifier.
 	 */
-	T findOne(Long executionId);
+	JE findOne(Long executionId);
 
 	/**
 	 * Because it may be possible that the status of a JobExecution is updated
@@ -73,6 +73,6 @@ public interface JobExecutionDao<T,I> {
 	 * 
 	 * @param jobExecution to be updated.
 	 */
-	void synchronizeStatus(T jobExecution);
+	void synchronizeStatus(JE jobExecution);
 
 }
