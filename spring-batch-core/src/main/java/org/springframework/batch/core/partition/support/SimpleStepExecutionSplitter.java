@@ -76,7 +76,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 	 * @param partitioner a {@link Partitioner} to use for generating input
 	 * parameters
 	 */
-	public SimpleStepExecutionSplitter(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository, final boolean allowStartIfComplete, final String stepName, final Partitioner partitioner) {
+	public SimpleStepExecutionSplitter(JobRepository<JobExecution, JobInstance, StepExecution> jobRepository, boolean allowStartIfComplete, String stepName, Partitioner partitioner) {
 		this.jobRepository = jobRepository;
 		this.allowStartIfComplete = allowStartIfComplete;
 		this.partitioner = partitioner;
@@ -96,7 +96,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 	 * @deprecated use {@link #SimpleStepExecutionSplitter(JobRepository, boolean, String, Partitioner)} instead
 	 */
 	@Deprecated
-	public SimpleStepExecutionSplitter(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository, final Step step, final Partitioner partitioner) {
+	public SimpleStepExecutionSplitter(JobRepository<JobExecution, JobInstance, StepExecution> jobRepository, Step step, Partitioner partitioner) {
 		this.jobRepository = jobRepository;
 		this.allowStartIfComplete = step.isAllowStartIfComplete();
 		this.partitioner = partitioner;
@@ -124,7 +124,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 	 *
 	 * @param allowStartIfComplete the value to set
 	 */
-	public void setAllowStartIfComplete(final boolean allowStartIfComplete) {
+	public void setAllowStartIfComplete(boolean allowStartIfComplete) {
 		this.allowStartIfComplete = allowStartIfComplete;
 	}
 
@@ -134,7 +134,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 	 *
 	 * @param jobRepository the JobRepository to set
 	 */
-	public void setJobRepository(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
+	public void setJobRepository(JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
 		this.jobRepository = jobRepository;
 	}
 
@@ -144,7 +144,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 	 *
 	 * @param partitioner the partitioner to set
 	 */
-	public void setPartitioner(final Partitioner partitioner) {
+	public void setPartitioner(Partitioner partitioner) {
 		this.partitioner = partitioner;
 	}
 
@@ -154,7 +154,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 	 *
 	 * @param stepName the step name to set
 	 */
-	public void setStepName(final String stepName) {
+	public void setStepName(String stepName) {
 		this.stepName = stepName;
 	}
 
@@ -170,21 +170,21 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 	 * @see StepExecutionSplitter#split(StepExecution, int)
 	 */
 	@Override
-	public Set<StepExecution> split(final StepExecution stepExecution, final int gridSize) throws JobExecutionException {
+	public Set<StepExecution> split(StepExecution stepExecution, int gridSize) throws JobExecutionException {
 
-		final JobExecution jobExecution = stepExecution.getJobExecution();
+		JobExecution jobExecution = stepExecution.getJobExecution();
 
-		final Map<String, ExecutionContext> contexts = getContexts(stepExecution, gridSize);
-		final Set<StepExecution> set = new HashSet<StepExecution>(contexts.size());
+		Map<String, ExecutionContext> contexts = getContexts(stepExecution, gridSize);
+		Set<StepExecution> set = new HashSet<StepExecution>(contexts.size());
 
-		for (final Entry<String, ExecutionContext> context : contexts.entrySet()) {
+		for (Entry<String, ExecutionContext> context : contexts.entrySet()) {
 
 			// Make the step execution name unique and repeatable
-			final String stepName = this.stepName + STEP_NAME_SEPARATOR + context.getKey();
+			String stepName = this.stepName + STEP_NAME_SEPARATOR + context.getKey();
 
-			final StepExecution currentStepExecution = jobExecution.createStepExecution(stepName);
+			StepExecution currentStepExecution = jobExecution.createStepExecution(stepName);
 
-			final boolean startable = getStartable(currentStepExecution, context.getValue());
+			boolean startable = getStartable(currentStepExecution, context.getValue());
 
 			if (startable) {
 				set.add(currentStepExecution);
@@ -197,14 +197,14 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 
 	}
 
-	private Map<String, ExecutionContext> getContexts(final StepExecution stepExecution, final int gridSize) {
+	private Map<String, ExecutionContext> getContexts(StepExecution stepExecution, int gridSize) {
 
-		final ExecutionContext context = stepExecution.getExecutionContext();
-		final String key = SimpleStepExecutionSplitter.class.getSimpleName() + ".GRID_SIZE";
+		ExecutionContext context = stepExecution.getExecutionContext();
+		String key = SimpleStepExecutionSplitter.class.getSimpleName() + ".GRID_SIZE";
 
 		// If this is a restart we must retain the same grid size, ignoring the
 		// one passed in...
-		final int splitSize = (int) context.getLong(key, gridSize);
+		int splitSize = (int) context.getLong(key, gridSize);
 		context.putLong(key, splitSize);
 
 		Map<String, ExecutionContext> result;
@@ -216,7 +216,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 		else {
 			if (partitioner instanceof PartitionNameProvider) {
 				result = new HashMap<String, ExecutionContext>();
-				final Collection<String> names = ((PartitionNameProvider) partitioner).getPartitionNames(splitSize);
+				Collection<String> names = ((PartitionNameProvider) partitioner).getPartitionNames(splitSize);
 				for (final String name : names) {
 					/*
 					 * We need to return the same keys as the original (failed)
