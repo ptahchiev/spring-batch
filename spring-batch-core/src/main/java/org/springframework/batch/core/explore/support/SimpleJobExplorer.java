@@ -28,6 +28,7 @@ import org.springframework.batch.core.repository.dao.ExecutionContextDao;
 import org.springframework.batch.core.repository.dao.JobExecutionDao;
 import org.springframework.batch.core.repository.dao.JobInstanceDao;
 import org.springframework.batch.core.repository.dao.StepExecutionDao;
+import org.springframework.batch.item.ExecutionContext;
 
 /**
  * Implementation of {@link JobExplorer} using the injected DAOs.
@@ -50,7 +51,7 @@ public class SimpleJobExplorer implements JobExplorer {
 
 	private StepExecutionDao<StepExecution, JobExecution> stepExecutionDao;
 
-	private ExecutionContextDao<JobExecution, StepExecution> ecDao;
+	private ExecutionContextDao<JobExecution, StepExecution, ExecutionContext> ecDao;
 
 	/**
 	 * Provide default constructor with low visibility in case user wants to use
@@ -59,8 +60,8 @@ public class SimpleJobExplorer implements JobExplorer {
 	SimpleJobExplorer() {
 	}
 
-	public SimpleJobExplorer(final JobInstanceDao<JobInstance> jobInstanceDao, final JobExecutionDao<JobExecution, JobInstance> jobExecutionDao,
-			final StepExecutionDao<StepExecution, JobExecution> stepExecutionDao, final ExecutionContextDao<JobExecution, StepExecution> ecDao) {
+	public SimpleJobExplorer(JobInstanceDao<JobInstance> jobInstanceDao, JobExecutionDao<JobExecution, JobInstance> jobExecutionDao,
+			StepExecutionDao<StepExecution, JobExecution> stepExecutionDao, ExecutionContextDao<JobExecution, StepExecution, ExecutionContext> ecDao) {
 		super();
 		this.jobInstanceDao = jobInstanceDao;
 		this.jobExecutionDao = jobExecutionDao;
@@ -76,11 +77,11 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * org.springframework.batch.core.JobInstance)
 	 */
 	@Override
-	public List<JobExecution> getJobExecutions(final JobInstance jobInstance) {
-		final List<JobExecution> executions = jobExecutionDao.findAllByJobInstance(jobInstance);
-		for (final JobExecution jobExecution : executions) {
+	public List<JobExecution> getJobExecutions(JobInstance jobInstance) {
+		List<JobExecution> executions = jobExecutionDao.findAllByJobInstance(jobInstance);
+		for (JobExecution jobExecution : executions) {
 			getJobExecutionDependencies(jobExecution);
-			for (final StepExecution stepExecution : jobExecution.getStepExecutions()) {
+			for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
 				getStepExecutionDependencies(stepExecution);
 			}
 		}
@@ -95,11 +96,11 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * (java.lang.String)
 	 */
 	@Override
-	public Set<JobExecution> findRunningJobExecutions(final String jobName) {
-		final Set<JobExecution> executions = jobExecutionDao.findByJobNameAndEndTimeIsNullOrderByJobExecutionId(jobName);
-		for (final JobExecution jobExecution : executions) {
+	public Set<JobExecution> findRunningJobExecutions(String jobName) {
+		Set<JobExecution> executions = jobExecutionDao.findByJobNameAndEndTimeIsNullOrderByJobExecutionId(jobName);
+		for (JobExecution jobExecution : executions) {
 			getJobExecutionDependencies(jobExecution);
-			for (final StepExecution stepExecution : jobExecution.getStepExecutions()) {
+			for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
 				getStepExecutionDependencies(stepExecution);
 			}
 		}
@@ -137,13 +138,13 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * .lang.Long)
 	 */
 	@Override
-	public StepExecution getStepExecution(final Long jobExecutionId, final Long executionId) {
-		final JobExecution jobExecution = jobExecutionDao.findOne(jobExecutionId);
+	public StepExecution getStepExecution(Long jobExecutionId, Long executionId) {
+		JobExecution jobExecution = jobExecutionDao.findOne(jobExecutionId);
 		if (jobExecution == null) {
 			return null;
 		}
 		getJobExecutionDependencies(jobExecution);
-		final StepExecution stepExecution = stepExecutionDao.getStepExecution(jobExecution, executionId);
+		StepExecution stepExecution = stepExecutionDao.getStepExecution(jobExecution, executionId);
 		getStepExecutionDependencies(stepExecution);
 		return stepExecution;
 	}
@@ -156,7 +157,7 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * .lang.Long)
 	 */
 	@Override
-	public JobInstance getJobInstance(final Long instanceId) {
+	public JobInstance getJobInstance(Long instanceId) {
 		return jobInstanceDao.getJobInstance(instanceId);
 	}
 
@@ -168,7 +169,7 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * (java.lang.String, int)
 	 */
 	@Override
-	public List<JobInstance> getJobInstances(final String jobName, final int start, final int count) {
+	public List<JobInstance> getJobInstances(String jobName, int start, int count) {
 		return jobInstanceDao.getJobInstances(jobName, start, count);
 	}
 
@@ -186,7 +187,7 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * @see org.springframework.batch.core.explore.JobExplorer#getJobInstanceCount(java.lang.String)
 	 */
 	@Override
-	public int getJobInstanceCount(final String jobName) throws NoSuchJobException {
+	public int getJobInstanceCount(String jobName) throws NoSuchJobException {
 		return jobInstanceDao.getJobInstanceCount(jobName);
 	}
 
@@ -194,16 +195,16 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * Find all dependencies for a JobExecution, including JobInstance (which
 	 * requires JobParameters) plus StepExecutions
 	 */
-	private void getJobExecutionDependencies(final JobExecution jobExecution) {
+	private void getJobExecutionDependencies(JobExecution jobExecution) {
 	    
-		final JobInstance jobInstance = jobInstanceDao.getJobInstance(jobExecution);
+		JobInstance jobInstance = jobInstanceDao.getJobInstance(jobExecution);
 		stepExecutionDao.addStepExecutions(jobExecution);
 		jobExecution.setJobInstance(jobInstance);
 		jobExecution.setExecutionContext(ecDao.getJobExecutionContext(jobExecution));
 
 	}
 
-	private void getStepExecutionDependencies(final StepExecution stepExecution) {
+	private void getStepExecutionDependencies(StepExecution stepExecution) {
 		if (stepExecution != null) {
 			stepExecution.setExecutionContext(ecDao.getStepExecutionContext(stepExecution));
 		}
