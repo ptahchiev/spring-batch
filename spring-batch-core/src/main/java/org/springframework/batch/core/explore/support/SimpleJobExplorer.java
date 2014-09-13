@@ -115,16 +115,16 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * .lang.Long)
 	 */
 	@Override
-	public JobExecution getJobExecution(final Long executionId) {
+	public JobExecution getJobExecution(Long executionId) {
 		if (executionId == null) {
 			return null;
 		}
-		final JobExecution jobExecution = jobExecutionDao.findOne(executionId);
+		JobExecution jobExecution = jobExecutionDao.findOne(executionId);
 		if (jobExecution == null) {
 			return null;
 		}
 		getJobExecutionDependencies(jobExecution);
-		for (final StepExecution stepExecution : jobExecution.getStepExecutions()) {
+		for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
 			getStepExecutionDependencies(stepExecution);
 		}
 		return jobExecution;
