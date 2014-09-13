@@ -56,7 +56,7 @@ public class SimpleStepHandler implements StepHandler, InitializingBean {
 	/**
 	 * @param jobRepository a {@link org.springframework.batch.core.repository.JobRepository}
 	 */
-	public SimpleStepHandler(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
+	public SimpleStepHandler(JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
 		this(jobRepository, new ExecutionContext());
 	}
 
@@ -64,7 +64,7 @@ public class SimpleStepHandler implements StepHandler, InitializingBean {
 	 * @param jobRepository a {@link org.springframework.batch.core.repository.JobRepository}
 	 * @param executionContext the {@link org.springframework.batch.item.ExecutionContext} for the current Step
 	 */
-	public SimpleStepHandler(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository, final ExecutionContext executionContext) {
+	public SimpleStepHandler(JobRepository<JobExecution, JobInstance, StepExecution> jobRepository, ExecutionContext executionContext) {
 		this.jobRepository = jobRepository;
 		this.executionContext = executionContext;
 	}
@@ -89,7 +89,7 @@ public class SimpleStepHandler implements StepHandler, InitializingBean {
 	/**
 	 * @param jobRepository the jobRepository to set
 	 */
-	public void setJobRepository(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
+	public void setJobRepository(JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
 		this.jobRepository = jobRepository;
 	}
 
@@ -99,18 +99,18 @@ public class SimpleStepHandler implements StepHandler, InitializingBean {
 	 *
 	 * @param executionContext the execution context to set
 	 */
-	public void setExecutionContext(final ExecutionContext executionContext) {
+	public void setExecutionContext(ExecutionContext executionContext) {
 		this.executionContext = executionContext;
 	}
 
 	@Override
-	public StepExecution handleStep(final Step step, final JobExecution execution) throws JobInterruptedException,
+	public StepExecution handleStep(Step step, JobExecution execution) throws JobInterruptedException,
 	JobRestartException, StartLimitExceededException {
 		if (execution.isStopping()) {
 			throw new JobInterruptedException("JobExecution interrupted.");
 		}
 
-		final JobInstance jobInstance = execution.getJobInstance();
+		JobInstance jobInstance = execution.getJobInstance();
 
 		StepExecution lastStepExecution = jobRepository.getLastStepExecution(jobInstance, step.getName());
 		if (stepExecutionPartOfExistingJobExecution(execution, lastStepExecution)) {
@@ -127,7 +127,7 @@ public class SimpleStepHandler implements StepHandler, InitializingBean {
 
 			currentStepExecution = execution.createStepExecution(step.getName());
 
-			final boolean isRestart = (lastStepExecution != null && !lastStepExecution.getStatus().equals(
+			boolean isRestart = (lastStepExecution != null && !lastStepExecution.getStatus().equals(
 					BatchStatus.COMPLETED));
 
 			if (isRestart) {
@@ -148,7 +148,7 @@ public class SimpleStepHandler implements StepHandler, InitializingBean {
 				step.execute(currentStepExecution);
 				currentStepExecution.getExecutionContext().put("batch.executed", true);
 			}
-			catch (final JobInterruptedException e) {
+			catch (JobInterruptedException e) {
 				// Ensure that the job gets the message that it is stopping
 				// and can pass it on to other steps that are executing
 				// concurrently.
@@ -176,7 +176,7 @@ public class SimpleStepHandler implements StepHandler, InitializingBean {
 	 * @param stepExecution an existing step execution
 	 * @return true if the {@link org.springframework.batch.core.StepExecution} is part of the {@link org.springframework.batch.core.JobExecution}
 	 */
-	private boolean stepExecutionPartOfExistingJobExecution(final JobExecution jobExecution, final StepExecution stepExecution) {
+	private boolean stepExecutionPartOfExistingJobExecution(JobExecution jobExecution, StepExecution stepExecution) {
 		return stepExecution != null && stepExecution.getJobExecutionId() != null
 				&& stepExecution.getJobExecutionId().equals(jobExecution.getId());
 	}
@@ -193,7 +193,7 @@ public class SimpleStepHandler implements StepHandler, InitializingBean {
 	 * @throws JobRestartException if the job is in an inconsistent state from
 	 * an earlier failure
 	 */
-	protected boolean shouldStart(final StepExecution lastStepExecution, final JobExecution jobExecution, final Step step)
+	protected boolean shouldStart(StepExecution lastStepExecution, JobExecution jobExecution, Step step)
 			throws JobRestartException, StartLimitExceededException {
 
 		BatchStatus stepStatus;
