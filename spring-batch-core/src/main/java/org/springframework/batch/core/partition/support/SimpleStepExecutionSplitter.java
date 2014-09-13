@@ -217,7 +217,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 			if (partitioner instanceof PartitionNameProvider) {
 				result = new HashMap<String, ExecutionContext>();
 				Collection<String> names = ((PartitionNameProvider) partitioner).getPartitionNames(splitSize);
-				for (final String name : names) {
+				for (String name : names) {
 					/*
 					 * We need to return the same keys as the original (failed)
 					 * execution, but the execution contexts will be discarded
@@ -235,13 +235,13 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 		return result;
 	}
 
-	protected boolean getStartable(final StepExecution stepExecution, final ExecutionContext context) throws JobExecutionException {
+	protected boolean getStartable(StepExecution stepExecution, ExecutionContext context) throws JobExecutionException {
 
-		final JobInstance jobInstance = stepExecution.getJobExecution().getJobInstance();
-		final String stepName = stepExecution.getStepName();
-		final StepExecution lastStepExecution = jobRepository.getLastStepExecution(jobInstance, stepName);
+		JobInstance jobInstance = stepExecution.getJobExecution().getJobInstance();
+		String stepName = stepExecution.getStepName();
+		StepExecution lastStepExecution = jobRepository.getLastStepExecution(jobInstance, stepName);
 
-		final boolean isRestart = (lastStepExecution != null && lastStepExecution.getStatus() != BatchStatus.COMPLETED);
+		boolean isRestart = (lastStepExecution != null && lastStepExecution.getStatus() != BatchStatus.COMPLETED);
 
 		if (isRestart) {
 			stepExecution.setExecutionContext(lastStepExecution.getExecutionContext());
@@ -254,14 +254,14 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 
 	}
 
-	private boolean shouldStart(final boolean allowStartIfComplete, final StepExecution stepExecution, final StepExecution lastStepExecution)
+	private boolean shouldStart(boolean allowStartIfComplete, StepExecution stepExecution, StepExecution lastStepExecution)
 			throws JobExecutionException {
 
 		if (lastStepExecution == null) {
 			return true;
 		}
 
-		final BatchStatus stepStatus = lastStepExecution.getStatus();
+		BatchStatus stepStatus = lastStepExecution.getStatus();
 
 		if (stepStatus == BatchStatus.UNKNOWN) {
 			throw new JobExecutionException("Cannot restart step from UNKNOWN status.  "
@@ -302,7 +302,7 @@ public class SimpleStepExecutionSplitter implements StepExecutionSplitter, Initi
 
 	}
 
-	private boolean isSameJobExecution(final StepExecution stepExecution, final StepExecution lastStepExecution) {
+	private boolean isSameJobExecution(StepExecution stepExecution, StepExecution lastStepExecution) {
 		if (stepExecution.getJobExecutionId()==null) {
 			return lastStepExecution.getJobExecutionId()==null;
 		}
