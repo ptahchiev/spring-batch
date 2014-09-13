@@ -82,7 +82,7 @@ public class MapExecutionContextDao implements ExecutionContextDao<JobExecution,
 			return false;
 		}
 
-		public boolean equals(final ContextKey them) {
+		public boolean equals(ContextKey them) {
 			if(them == null) {
 				return false;
 			}
@@ -152,7 +152,7 @@ public class MapExecutionContextDao implements ExecutionContextDao<JobExecution,
 	@Override
 	public void saveStepExecutionContexts(Collection<StepExecution> stepExecutions) {
 		Assert.notNull(stepExecutions,"Attempt to save a nulk collection of step executions");
-		for (final StepExecution stepExecution: stepExecutions) {
+		for (StepExecution stepExecution: stepExecutions) {
 			saveStepExecutionContext(stepExecution);
 			saveJobExecutionContext(stepExecution.getJobExecution());
 		}
