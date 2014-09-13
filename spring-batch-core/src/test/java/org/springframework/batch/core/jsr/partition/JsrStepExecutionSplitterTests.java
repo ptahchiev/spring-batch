@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.partition.JsrStepExecutionSplitter;
 import org.springframework.batch.core.step.JobRepositorySupport;
 
 public class JsrStepExecutionSplitterTests {
@@ -38,7 +37,7 @@ public class JsrStepExecutionSplitterTests {
 
 	@Test
 	public void test() throws Exception {
-		Set<StepExecution> executions = splitter.split(new StepExecution("step1", new JobExecution(5l)), 3);
+		Set<StepExecution> executions = splitter.split(new StepExecution("step1", new JobExecution(5L)), 3);
 
 		assertEquals(3, executions.size());
 

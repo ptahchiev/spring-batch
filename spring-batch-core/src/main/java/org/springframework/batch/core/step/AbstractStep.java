@@ -21,8 +21,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobInterruptedException;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
@@ -61,9 +59,9 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 
 	private boolean allowStartIfComplete = false;
 
-	private final CompositeStepExecutionListener stepExecutionListener = new CompositeStepExecutionListener();
+	private CompositeStepExecutionListener stepExecutionListener = new CompositeStepExecutionListener();
 
-	private JobRepository<JobExecution, JobInstance, StepExecution> jobRepository;
+	private JobRepository jobRepository;
 
 	/**
 	 * Default constructor.
@@ -88,7 +86,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @see #setBeanName(java.lang.String)
 	 */
-	public void setName(final String name) {
+	public void setName(String name) {
 		this.name = name;
 	}
 
@@ -100,7 +98,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 * @see org.springframework.beans.factory.BeanNameAware#setBeanName(java.lang.String)
 	 */
 	@Override
-	public void setBeanName(final String name) {
+	public void setBeanName(String name) {
 		if (this.name == null) {
 			this.name = name;
 		}
@@ -116,7 +114,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @param startLimit the startLimit to set
 	 */
-	public void setStartLimit(final int startLimit) {
+	public void setStartLimit(int startLimit) {
 		this.startLimit = startLimit == 0 ? Integer.MAX_VALUE : startLimit;
 	}
 
@@ -131,7 +129,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @param allowStartIfComplete the value of the flag to set
 	 */
-	public void setAllowStartIfComplete(final boolean allowStartIfComplete) {
+	public void setAllowStartIfComplete(boolean allowStartIfComplete) {
 		this.allowStartIfComplete = allowStartIfComplete;
 	}
 
@@ -140,7 +138,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @param name
 	 */
-	public AbstractStep(final String name) {
+	public AbstractStep(String name) {
 		this.name = name;
 	}
 
@@ -160,7 +158,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 * @param ctx the {@link ExecutionContext} to use
 	 * @throws Exception
 	 */
-	protected void open(final ExecutionContext ctx) throws Exception {
+	protected void open(ExecutionContext ctx) throws Exception {
 	}
 
 	/**
@@ -170,7 +168,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 * @param ctx the {@link ExecutionContext} to use
 	 * @throws Exception
 	 */
-	protected void close(final ExecutionContext ctx) throws Exception {
+	protected void close(ExecutionContext ctx) throws Exception {
 	}
 
 	/**
@@ -179,13 +177,13 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 * {@link #close(ExecutionContext)}).
 	 */
 	@Override
-	public final void execute(final StepExecution stepExecution) throws JobInterruptedException,
+	public final void execute(StepExecution stepExecution) throws JobInterruptedException,
 	UnexpectedJobExecutionException {
 
 		logger.debug("Executing: id=" + stepExecution.getId());
 		stepExecution.setStartTime(new Date());
 		stepExecution.setStatus(BatchStatus.STARTED);
-		getJobRepository().updateStepExecution(stepExecution);
+		getJobRepository().update(stepExecution);
 
 		// Start with a default value that will be trumped by anything
 		ExitStatus exitStatus = ExitStatus.EXECUTING;
@@ -199,7 +197,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 			try {
 				doExecute(stepExecution);
 			}
-			catch (final RepeatException e) {
+			catch (RepeatException e) {
 				throw e.getCause();
 			}
 			exitStatus = ExitStatus.COMPLETED.and(stepExecution.getExitStatus());
@@ -213,18 +211,18 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 			stepExecution.upgradeStatus(BatchStatus.COMPLETED);
 			logger.debug("Step execution success: id=" + stepExecution.getId());
 		}
-		catch (final Throwable e) {
+		catch (Throwable e) {
 			stepExecution.upgradeStatus(determineBatchStatus(e));
 			exitStatus = exitStatus.and(getDefaultExitStatusForFailure(e));
 			stepExecution.addFailureException(e);
 			if (stepExecution.getStatus() == BatchStatus.STOPPED) {
-				logger.info("Encountered interruption executing step: " + e.getMessage());
+				logger.info(String.format("Encountered interruption executing step %s in job %s : %s", name, stepExecution.getJobExecution().getJobInstance().getJobName(), e.getMessage()));
 				if (logger.isDebugEnabled()) {
 					logger.debug("Full exception", e);
 				}
 			}
 			else {
-				logger.error("Encountered an error executing the step", e);
+				logger.error(String.format("Encountered an error executing step %s in job %s", name, stepExecution.getJobExecution().getJobInstance().getJobName()), e);
 			}
 		}
 		finally {
@@ -236,40 +234,40 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 				stepExecution.setExitStatus(exitStatus);
 				exitStatus = exitStatus.and(getCompositeListener().afterStep(stepExecution));
 			}
-			catch (final Exception e) {
-				logger.error("Exception in afterStep callback", e);
+			catch (Exception e) {
+				logger.error(String.format("Exception in afterStep callback in step %s in job %s", name, stepExecution.getJobExecution().getJobInstance().getJobName()), e);
 			}
 
 			try {
-				getJobRepository().updateStepExecutionContext(stepExecution);
+				getJobRepository().updateExecutionContext(stepExecution);
 			}
-			catch (final Exception e) {
+			catch (Exception e) {
 				stepExecution.setStatus(BatchStatus.UNKNOWN);
 				exitStatus = exitStatus.and(ExitStatus.UNKNOWN);
 				stepExecution.addFailureException(e);
-				logger.error("Encountered an error saving batch meta data. "
-						+ "This job is now in an unknown state and should not be restarted.", e);
+				logger.error(String.format("Encountered an error saving batch meta data for step %s in job %s. "
+						+ "This job is now in an unknown state and should not be restarted.", name, stepExecution.getJobExecution().getJobInstance().getJobName()), e);
 			}
 
 			stepExecution.setEndTime(new Date());
 			stepExecution.setExitStatus(exitStatus);
 
 			try {
-				getJobRepository().updateStepExecution(stepExecution);
+				getJobRepository().update(stepExecution);
 			}
-			catch (final Exception e) {
+			catch (Exception e) {
 				stepExecution.setStatus(BatchStatus.UNKNOWN);
 				stepExecution.setExitStatus(exitStatus.and(ExitStatus.UNKNOWN));
 				stepExecution.addFailureException(e);
-				logger.error("Encountered an error saving batch meta data. "
-						+ "This job is now in an unknown state and should not be restarted.", e);
+				logger.error(String.format("Encountered an error saving batch meta data for step %s in job %s. "
+						+ "This job is now in an unknown state and should not be restarted.", name, stepExecution.getJobExecution().getJobInstance().getJobName()), e);
 			}
 
 			try {
 				close(stepExecution.getExecutionContext());
 			}
-			catch (final Exception e) {
-				logger.error("Exception while closing step execution resources", e);
+			catch (Exception e) {
+				logger.error(String.format("Exception while closing step execution resources in step %s in job %s", name, stepExecution.getJobExecution().getJobInstance().getJobName()), e);
 				stepExecution.addFailureException(e);
 			}
 
@@ -291,14 +289,14 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @param stepExecution
 	 */
-	protected void doExecutionRegistration(final StepExecution stepExecution) {
+	protected void doExecutionRegistration(StepExecution stepExecution) {
 		StepSynchronizationManager.register(stepExecution);
 	}
 
 	/**
 	 * Determine the step status based on the exception.
 	 */
-	private static BatchStatus determineBatchStatus(final Throwable e) {
+	private static BatchStatus determineBatchStatus(Throwable e) {
 		if (e instanceof JobInterruptedException || e.getCause() instanceof JobInterruptedException) {
 			return BatchStatus.STOPPED;
 		}
@@ -312,7 +310,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @param listener a {@link StepExecutionListener}
 	 */
-	public void registerStepExecutionListener(final StepExecutionListener listener) {
+	public void registerStepExecutionListener(StepExecutionListener listener) {
 		this.stepExecutionListener.register(listener);
 	}
 
@@ -321,7 +319,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @param listeners an array of listener objects of known types.
 	 */
-	public void setStepExecutionListeners(final StepExecutionListener[] listeners) {
+	public void setStepExecutionListeners(StepExecutionListener[] listeners) {
 		for (int i = 0; i < listeners.length; i++) {
 			registerStepExecutionListener(listeners[i]);
 		}
@@ -339,11 +337,11 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @param jobRepository is a mandatory dependence (no default).
 	 */
-	public void setJobRepository(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
+	public void setJobRepository(JobRepository jobRepository) {
 		this.jobRepository = jobRepository;
 	}
 
-	protected JobRepository<JobExecution, JobInstance, StepExecution> getJobRepository() {
+	protected JobRepository getJobRepository() {
 		return jobRepository;
 	}
 
@@ -359,7 +357,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 * @param ex the cause of the failure
 	 * @return an {@link ExitStatus}
 	 */
-	private ExitStatus getDefaultExitStatusForFailure(final Throwable ex) {
+	private ExitStatus getDefaultExitStatusForFailure(Throwable ex) {
 		ExitStatus exitStatus;
 		if (ex instanceof JobInterruptedException || ex.getCause() instanceof JobInterruptedException) {
 			exitStatus = ExitStatus.STOPPED.addExitDescription(JobInterruptedException.class.getName());

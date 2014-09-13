@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.batch.core.jsr.configuration.xml;
 import java.util.List;
 
 import org.springframework.batch.core.configuration.xml.ExceptionElementParser;
-import org.springframework.batch.core.jsr.configuration.support.BatchArtifact;
+import org.springframework.batch.core.jsr.configuration.support.BatchArtifactType;
 import org.springframework.batch.core.step.item.ChunkOrientedTasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -116,7 +116,6 @@ public class ChunkParser {
 		}
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	private void parseChildElement(Element element, ParserContext parserContext,
 			MutablePropertyValues propertyValues, Node nd, String stepName) {
 		if (nd instanceof Element) {
@@ -126,35 +125,35 @@ public class ChunkParser {
 
 			if(name.equals(READER_ELEMENT)) {
 				if (StringUtils.hasText(artifactName)) {
-					propertyValues.addPropertyValue("itemReader", new RuntimeBeanReference(artifactName));
+					propertyValues.addPropertyValue("stepItemReader", new RuntimeBeanReference(artifactName));
 				}
 
-				new PropertyParser(artifactName, parserContext, BatchArtifact.BatchArtifactType.STEP_ARTIFACT, stepName).parseProperties(nestedElement);
+				new PropertyParser(artifactName, parserContext, BatchArtifactType.STEP_ARTIFACT, stepName).parseProperties(nestedElement);
 			} else if(name.equals(PROCESSOR_ELEMENT)) {
 				if (StringUtils.hasText(artifactName)) {
-					propertyValues.addPropertyValue("itemProcessor", new RuntimeBeanReference(artifactName));
+					propertyValues.addPropertyValue("stepItemProcessor", new RuntimeBeanReference(artifactName));
 				}
 
-				new PropertyParser(artifactName, parserContext, BatchArtifact.BatchArtifactType.STEP_ARTIFACT, stepName).parseProperties(nestedElement);
+				new PropertyParser(artifactName, parserContext, BatchArtifactType.STEP_ARTIFACT, stepName).parseProperties(nestedElement);
 			} else if(name.equals(WRITER_ELEMENT)) {
 				if (StringUtils.hasText(artifactName)) {
-					propertyValues.addPropertyValue("itemWriter", new RuntimeBeanReference(artifactName));
+					propertyValues.addPropertyValue("stepItemWriter", new RuntimeBeanReference(artifactName));
 				}
 
-				new PropertyParser(artifactName, parserContext, BatchArtifact.BatchArtifactType.STEP_ARTIFACT, stepName).parseProperties(nestedElement);
+				new PropertyParser(artifactName, parserContext, BatchArtifactType.STEP_ARTIFACT, stepName).parseProperties(nestedElement);
 			} else if(name.equals(SKIPPABLE_EXCEPTION_CLASSES_ELEMENT)) {
-				ManagedMap exceptionClasses = new ExceptionElementParser().parse(element, parserContext, SKIPPABLE_EXCEPTION_CLASSES_ELEMENT);
+				ManagedMap<TypedStringValue, Boolean> exceptionClasses = new ExceptionElementParser().parse(element, parserContext, SKIPPABLE_EXCEPTION_CLASSES_ELEMENT);
 				if(exceptionClasses != null) {
 					propertyValues.addPropertyValue("skippableExceptionClasses", exceptionClasses);
 				}
 			} else if(name.equals(RETRYABLE_EXCEPTION_CLASSES_ELEMENT)) {
-				ManagedMap exceptionClasses = new ExceptionElementParser().parse(element, parserContext, RETRYABLE_EXCEPTION_CLASSES_ELEMENT);
+				ManagedMap<TypedStringValue, Boolean> exceptionClasses = new ExceptionElementParser().parse(element, parserContext, RETRYABLE_EXCEPTION_CLASSES_ELEMENT);
 				if(exceptionClasses != null) {
 					propertyValues.addPropertyValue("retryableExceptionClasses", exceptionClasses);
 				}
 			} else if(name.equals(NO_ROLLBACK_EXCEPTION_CLASSES_ELEMENT)) {
 				//TODO: Update to support excludes
-				ManagedList list = new ManagedList();
+				ManagedList<TypedStringValue> list = new ManagedList<TypedStringValue>();
 
 				for (Element child : DomUtils.getChildElementsByTagName(nestedElement, INCLUDE_ELEMENT)) {
 					String className = child.getAttribute(CLASS_ATTRIBUTE);
@@ -174,10 +173,10 @@ public class ChunkParser {
 
 			String name = checkpointAlgorithmElement.getAttribute(REF_ATTRIBUTE);
 			if(StringUtils.hasText(name)) {
-				propertyValues.addPropertyValue("chunkCompletionPolicy", new RuntimeBeanReference(name));
+				propertyValues.addPropertyValue("stepChunkCompletionPolicy", new RuntimeBeanReference(name));
 			}
 
-			new PropertyParser(name, parserContext, BatchArtifact.BatchArtifactType.STEP_ARTIFACT, stepName).parseProperties(checkpointAlgorithmElement);
+			new PropertyParser(name, parserContext, BatchArtifactType.STEP_ARTIFACT, stepName).parseProperties(checkpointAlgorithmElement);
 		} else if(elements.size() > 1){
 			parserContext.getReaderContext().error(
 					"The <checkpoint-algorithm/> element may not appear more than once in a single <"

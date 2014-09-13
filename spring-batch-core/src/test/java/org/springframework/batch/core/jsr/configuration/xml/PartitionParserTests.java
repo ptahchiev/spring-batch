@@ -15,20 +15,10 @@
  */
 package org.springframework.batch.core.jsr.configuration.xml;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.springframework.batch.core.jsr.JsrTestUtils.runJob;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.batch.core.jsr.AbstractJsrTestCase;
+import org.springframework.util.Assert;
 
 import javax.batch.api.BatchProperty;
 import javax.batch.api.Batchlet;
@@ -41,15 +31,24 @@ import javax.batch.runtime.JobExecution;
 import javax.batch.runtime.context.JobContext;
 import javax.batch.runtime.context.StepContext;
 import javax.inject.Inject;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.util.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public class PartitionParserTests {
+public class PartitionParserTests extends AbstractJsrTestCase {
 	private Pattern caPattern = Pattern.compile("ca");
 	private Pattern asPattern = Pattern.compile("AS");
-	private static final long TIMEOUT = 10000l;
+	private static final long TIMEOUT = 10000L;
 
 	@Before
 	public void before() {
@@ -132,7 +131,6 @@ public class PartitionParserTests {
 		assertTrue(PartitionCollector.artifactNames.contains("collector1"));
 		assertTrue(PartitionCollector.artifactNames.contains("collector2"));
 
-		assertEquals(PartitionMapper.name, "mapper");
 		assertEquals(PartitionAnalyzer.name, "analyzer");
 		assertEquals(PartitionReducer.name, "reducer");
 	}

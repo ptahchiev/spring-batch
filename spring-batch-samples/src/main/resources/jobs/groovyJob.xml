@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:p="http://www.springframework.org/schema/p" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:lang="http://www.springframework.org/schema/lang"
-	xsi:schemaLocation="http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
+	xsi:schemaLocation="http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd">
 
@@ -35,7 +35,7 @@
 			void execute() {
 			def ant = new AntBuilder()
 			ant.unzip(src:"src/main/resources/data/groovyJob/input/files.zip",
-			dest:"target/groovyJob/staging")
+			dest:"build/groovyJob/staging")
 			}
 			}
 		</lang:inline-script>
@@ -46,12 +46,11 @@
 			class ZipTasklet {
 			void execute() {
 			def ant = new AntBuilder()
-			ant.mkdir(dir:"target/groovyJob/output")
-			ant.zip(destfile:"target/groovyJob/output/files.zip",
-			basedir:"target/groovyJob/staging", includes:"**")
+			ant.mkdir(dir:"build/groovyJob/output")
+			ant.zip(destfile:"build/groovyJob/output/files.zip",
+			basedir:"build/groovyJob/staging", includes:"**")
 			}
 			}
 		</lang:inline-script>
 	</lang:groovy>
-
 </beans>

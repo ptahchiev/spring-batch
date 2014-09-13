@@ -195,7 +195,7 @@ public class SimpleJobExplorer implements JobExplorer {
 	 * requires JobParameters) plus StepExecutions
 	 */
 	private void getJobExecutionDependencies(final JobExecution jobExecution) {
-
+	    
 		final JobInstance jobInstance = jobInstanceDao.getJobInstance(jobExecution);
 		stepExecutionDao.addStepExecutions(jobExecution);
 		jobExecution.setJobInstance(jobInstance);
@@ -207,5 +207,10 @@ public class SimpleJobExplorer implements JobExplorer {
 		if (stepExecution != null) {
 			stepExecution.setExecutionContext(ecDao.getStepExecutionContext(stepExecution));
 		}
+	}
+
+	@Override
+	public List<JobInstance> findJobInstancesByJobName(String jobName, int start, int count) {
+		return jobInstanceDao.findJobInstancesByName(jobName, start, count);
 	}
 }

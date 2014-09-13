@@ -1,7 +1,21 @@
+/*
+ * Copyright 2008-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.sample.domain.trade.internal;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -12,16 +26,14 @@ import org.springframework.batch.sample.domain.trade.CustomerCredit;
 import org.springframework.batch.sample.domain.trade.CustomerCreditDao;
 
 public class CustomerCreditUpdateProcessorTests {
-
 	private CustomerCreditDao dao;
 	private CustomerCreditUpdateWriter writer;
 	private static final double CREDIT_FILTER = 355.0;
 	
 	@Before
 	public void setUp() {
-		//create mock writer
 		dao = mock(CustomerCreditDao.class);
-		//create processor, set writer and credit filter
+
 		writer = new CustomerCreditUpdateWriter();
 		writer.setDao(dao);
 		writer.setCreditFilter(CREDIT_FILTER);
@@ -29,25 +41,15 @@ public class CustomerCreditUpdateProcessorTests {
 	
 	@Test
 	public void testProcess() throws Exception {
-		
-		//set-up mock writer - no writer's method should be called 
-		
-		//create credit and set it to same value as credit filter
 		CustomerCredit credit = new CustomerCredit();
 		credit.setCredit(new BigDecimal(CREDIT_FILTER));
-		//call tested method
+
 		writer.write(Collections.singletonList(credit));
-		//verify method calls - no method should be called 
-		//because credit is not greater then credit filter
-		
-		//change credit to be greater than credit filter
+
 		credit.setCredit(new BigDecimal(CREDIT_FILTER + 1));
-		//reset and set-up writer - write method is expected to be called
+
 		dao.writeCredit(credit);
 		
-		//call tested method
 		writer.write(Collections.singletonList(credit));
-		
 	}
-	
 }

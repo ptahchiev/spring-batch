@@ -26,6 +26,7 @@ public class FootballExceptionHandler implements ExceptionHandler {
 	private static final Log logger = LogFactory
 			.getLog(FootballExceptionHandler.class);
 
+	@Override
 	public void handleException(RepeatContext context, Throwable throwable)
 			throws Throwable {
 

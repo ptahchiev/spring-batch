@@ -15,11 +15,6 @@
  */
 package org.springframework.batch.item.data;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.item.ExecutionContext;
@@ -35,6 +30,11 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.MethodInvoker;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -54,19 +54,18 @@ import org.springframework.util.MethodInvoker;
  * </p>
  *
  * <p>
- * This implementation is thread safe between calls to {@link #open(ExecutionContext)}, but remember to use
+ * This implementation is thread-safe between calls to {@link #open(ExecutionContext)}, but remember to use
  * <code>saveState=false</code> if used in a multi-threaded client (no restart available).
  * </p>
  *
  * @author Michael Minella
  * @since 2.2
  */
-@SuppressWarnings("rawtypes")
 public class RepositoryItemReader<T> extends AbstractItemCountingItemStreamItemReader<T> implements InitializingBean {
 
 	protected Log logger = LogFactory.getLog(getClass());
 
-	private PagingAndSortingRepository repository;
+	private PagingAndSortingRepository<?, ?> repository;
 
 	private Sort sort;
 
@@ -76,7 +75,7 @@ public class RepositoryItemReader<T> extends AbstractItemCountingItemStreamItemR
 
 	private volatile int current = 0;
 
-	private List arguments;
+	private List<?> arguments;
 
 	private volatile List<T> results;
 
@@ -93,7 +92,7 @@ public class RepositoryItemReader<T> extends AbstractItemCountingItemStreamItemR
 	 *
 	 * @param arguments list of method arguments to be passed to the repository
 	 */
-	public void setArguments(List arguments) {
+	public void setArguments(List<?> arguments) {
 		this.arguments = arguments;
 	}
 
@@ -119,7 +118,7 @@ public class RepositoryItemReader<T> extends AbstractItemCountingItemStreamItemR
 	 *
 	 * @param repository underlying repository for input to be read from.
 	 */
-	public void setRepository(PagingAndSortingRepository repository) {
+	public void setRepository(PagingAndSortingRepository<?, ?> repository) {
 		this.repository = repository;
 	}
 
@@ -195,7 +194,7 @@ public class RepositoryItemReader<T> extends AbstractItemCountingItemStreamItemR
 
 		MethodInvoker invoker = createMethodInvoker(repository, methodName);
 
-		List parameters = new ArrayList();
+		List<Object> parameters = new ArrayList<Object>();
 
 		if(arguments != null && arguments.size() > 0) {
 			parameters.addAll(arguments);
@@ -205,7 +204,7 @@ public class RepositoryItemReader<T> extends AbstractItemCountingItemStreamItemR
 
 		invoker.setArguments(parameters.toArray());
 
-		Page curPage = (Page) doInvoke(invoker);
+		Page<T> curPage = (Page<T>) doInvoke(invoker);
 
 		return curPage.getContent();
 	}

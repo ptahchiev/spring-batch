@@ -1,3 +1,18 @@
+/*
+ * Copyright 2008-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.sample;
 
 import static org.junit.Assert.assertEquals;
@@ -27,9 +42,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "/simple-job-launcher-context.xml", "/jobs/compositeItemWriterSampleJob.xml", "/job-runner-context.xml" })
 public class CompositeItemWriterSampleFunctionalTests {
-
 	private static final String GET_TRADES = "SELECT isin, quantity, price, customer FROM TRADE order by isin";
-
 	private static final String EXPECTED_OUTPUT_FILE = "Trade: [isin=UK21341EAH41,quantity=211,price=31.11,customer=customer1]"
 			+ "Trade: [isin=UK21341EAH42,quantity=212,price=32.11,customer=customer2]"
 			+ "Trade: [isin=UK21341EAH43,quantity=213,price=33.11,customer=customer3]"
@@ -48,19 +61,18 @@ public class CompositeItemWriterSampleFunctionalTests {
 
 	@Test
 	public void testJobLaunch() throws Exception {
-
         jdbcTemplate.update("DELETE from TRADE");
-		int before = jdbcTemplate.queryForInt("SELECT COUNT(*) from TRADE");
+		int before = jdbcTemplate.queryForObject("SELECT COUNT(*) from TRADE", Integer.class);
 
 		jobLauncherTestUtils.launchJob();
 
-		checkOutputFile("target/test-outputs/CustomerReport1.txt");
-		checkOutputFile("target/test-outputs/CustomerReport2.txt");
+		checkOutputFile("build/test-outputs/CustomerReport1.txt");
+		checkOutputFile("build/test-outputs/CustomerReport2.txt");
 		checkOutputTable(before);
-
 	}
 
 	private void checkOutputTable(int before) {
+		@SuppressWarnings("serial")
 		final List<Trade> trades = new ArrayList<Trade>() {
 			{
 				add(new Trade("UK21341EAH41", 211, new BigDecimal("31.11"), "customer1"));
@@ -71,13 +83,14 @@ public class CompositeItemWriterSampleFunctionalTests {
 			}
 		};
 
-		int after = jdbcTemplate.queryForInt("SELECT COUNT(*) from TRADE");
+		int after = jdbcTemplate.queryForObject("SELECT COUNT(*) from TRADE", Integer.class);
 
 		assertEquals(before + 5, after);
 
-
         jdbcTemplate.query(GET_TRADES, new RowCallbackHandler() {
 			private int activeRow = 0;
+
+			@Override
 			public void processRow(ResultSet rs) throws SQLException {
 				Trade trade = trades.get(activeRow++);
 
@@ -91,7 +104,7 @@ public class CompositeItemWriterSampleFunctionalTests {
 	}
 
 	private void checkOutputFile(String fileName) throws IOException {
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({ "unchecked", "resource" })
 		List<String> outputLines = IOUtils.readLines(new FileInputStream(fileName));
 
 		String output = "";
@@ -101,5 +114,4 @@ public class CompositeItemWriterSampleFunctionalTests {
 
 		assertEquals(EXPECTED_OUTPUT_FILE, output);
 	}
-
 }

@@ -1,15 +1,19 @@
+/*
+ * Copyright 2013-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.item.data;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,9 +24,20 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
+
 public class MongoItemReaderTests {
 
-	private MongoItemReader reader;
+	private MongoItemReader<String> reader;
 	@Mock
 	private MongoOperations template;
 	private Map<String, Sort.Direction> sortOptions;
@@ -30,7 +45,7 @@ public class MongoItemReaderTests {
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
-		reader = new MongoItemReader();
+		reader = new MongoItemReader<String>();
 
 		sortOptions = new HashMap<String, Sort.Direction>();
 		sortOptions.put("name", Sort.Direction.DESC);
@@ -45,7 +60,7 @@ public class MongoItemReaderTests {
 
 	@Test
 	public void testAfterPropertiesSet() throws Exception{
-		reader = new MongoItemReader();
+		reader = new MongoItemReader<String>();
 
 		try {
 			reader.afterPropertiesSet();
@@ -161,9 +176,10 @@ public class MongoItemReaderTests {
 		assertEquals("{ $natural : 1}", query.getHint());
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testQueryWithParameters() {
-		reader.setParameterValues(new ArrayList<String>(){{
+		reader.setParameterValues(new ArrayList<Object>(){{
 			add("foo");
 		}});
 
@@ -179,5 +195,29 @@ public class MongoItemReaderTests {
 		assertEquals(0, query.getSkip());
 		assertEquals("{ \"name\" : \"foo\"}", query.getQueryObject().toString());
 		assertEquals("{ \"name\" : -1}", query.getSortObject().toString());
+	}
+
+	@SuppressWarnings("serial")
+	@Test
+	public void testQueryWithCollection() {
+		reader.setParameterValues(new ArrayList<Object>(){{
+			add("foo");
+		}});
+
+		reader.setQuery("{ name : ?0 }");
+		reader.setCollection("collection");
+		ArgumentCaptor<Query> queryContainer = ArgumentCaptor.forClass(Query.class);
+		ArgumentCaptor<String> collectionContainer = ArgumentCaptor.forClass(String.class);
+
+		when(template.find(queryContainer.capture(), eq(String.class), collectionContainer.capture())).thenReturn(new ArrayList<String>());
+
+		assertFalse(reader.doPageRead().hasNext());
+
+		Query query = queryContainer.getValue();
+		assertEquals(50, query.getLimit());
+		assertEquals(0, query.getSkip());
+		assertEquals("{ \"name\" : \"foo\"}", query.getQueryObject().toString());
+		assertEquals("{ \"name\" : -1}", query.getSortObject().toString());
+		assertEquals("collection", collectionContainer.getValue());
 	}
 }

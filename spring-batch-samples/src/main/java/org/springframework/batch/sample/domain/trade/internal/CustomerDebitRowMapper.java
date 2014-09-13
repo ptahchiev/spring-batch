@@ -23,12 +23,13 @@ import org.springframework.batch.sample.domain.trade.CustomerDebit;
 import org.springframework.jdbc.core.RowMapper;
 
 
-public class CustomerDebitRowMapper implements RowMapper {
+public class CustomerDebitRowMapper implements RowMapper<CustomerDebit> {
 	
 	public static final String CUSTOMER_COLUMN = "customer";
 	public static final String PRICE_COLUMN = "price";
 	
-    public Object mapRow(ResultSet rs, int ignoredRowNumber)
+    @Override
+	public CustomerDebit mapRow(ResultSet rs, int ignoredRowNumber)
         throws SQLException {
         CustomerDebit customerDebit = new CustomerDebit();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,8 @@ public class CustomerDebit {
         this.name = name;
     }
 
-    public String toString() {
+    @Override
+	public String toString() {
         return "CustomerDebit [name=" + name + ", debit=" + debit + "]";
     }
 
@@ -62,26 +63,33 @@ public class CustomerDebit {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		CustomerDebit other = (CustomerDebit) obj;
 		if (debit == null) {
-			if (other.debit != null)
+			if (other.debit != null) {
 				return false;
+			}
 		}
-		else if (!debit.equals(other.debit))
+		else if (!debit.equals(other.debit)) {
 			return false;
+		}
 		if (name == null) {
-			if (other.name != null)
+			if (other.name != null) {
 				return false;
+			}
 		}
-		else if (!name.equals(other.name))
+		else if (!name.equals(other.name)) {
 			return false;
+		}
+
 		return true;
 	}
-    
 }

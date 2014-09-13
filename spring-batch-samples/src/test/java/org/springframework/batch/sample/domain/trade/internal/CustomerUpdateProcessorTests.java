@@ -1,3 +1,18 @@
+/*
+ * Copyright 2008-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.sample.domain.trade.internal;
 
 import static org.junit.Assert.assertEquals;
@@ -11,28 +26,23 @@ import org.springframework.batch.sample.domain.trade.CustomerDebitDao;
 import org.springframework.batch.sample.domain.trade.Trade;
 
 public class CustomerUpdateProcessorTests {
-
 	@Test
 	public void testProcess() {
-		
-		//create trade object
 		Trade trade = new Trade();
 		trade.setCustomer("testCustomerName");
-		trade.setPrice(new BigDecimal(123.0));
+		trade.setPrice(new BigDecimal("123.0"));
 		
-		//create dao
 		CustomerDebitDao dao = new CustomerDebitDao() {
+			@Override
 			public void write(CustomerDebit customerDebit) {
 				assertEquals("testCustomerName", customerDebit.getName());
-				assertEquals(new BigDecimal(123.0), customerDebit.getDebit());
+				assertEquals(new BigDecimal("123.0"), customerDebit.getDebit());
 			}			
 		};
 		
-		//create processor and set dao
 		CustomerUpdateWriter processor = new CustomerUpdateWriter();
 		processor.setDao(dao);
 		
-		//call tested method - see asserts in dao.write() method
 		processor.write(Collections.singletonList(trade));
 	}
 }

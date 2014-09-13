@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ public class OrderItemReader implements ItemReader<Order> {
 	 * @throws Exception
 	 * @see org.springframework.batch.item.ItemReader#read()
 	 */
+	@Override
 	public Order read() throws Exception {
 		recordFinished = false;
 
@@ -85,7 +86,6 @@ public class OrderItemReader implements ItemReader<Order> {
 
 		String lineId = fieldSet.readString(0);
 
-		// start a new Order
 		if (Order.LINE_ID_HEADER.equals(lineId)) {
 			log.debug("STARTING NEW RECORD");
 			order = headerMapper.mapFieldSet(fieldSet);
@@ -145,7 +145,6 @@ public class OrderItemReader implements ItemReader<Order> {
 		else {
 			log.debug("Could not map LINE_ID=" + lineId);
 		}
-
 	}
 
 	/**

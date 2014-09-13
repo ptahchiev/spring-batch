@@ -1,10 +1,25 @@
+/*
+ * Copyright 2013 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.item.data;
-
-import java.util.Iterator;
 
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.item.support.AbstractItemCountingItemStreamItemReader;
+
+import java.util.Iterator;
 
 /**
  * A base class that handles basic reading logic based on the paginated
@@ -65,7 +80,7 @@ AbstractItemCountingItemStreamItemReader<T> {
 	 * for the actual work of reading a page.  Each time
 	 * this method is called, the resulting {@link Iterator}
 	 * should contain the items read within the next page.
-	 * <br/><br/>
+	 * <br><br>
 	 * If the {@link Iterator} is empty or null when it is
 	 * returned, this {@link ItemReader} will assume that the
 	 * input has been exhausted.

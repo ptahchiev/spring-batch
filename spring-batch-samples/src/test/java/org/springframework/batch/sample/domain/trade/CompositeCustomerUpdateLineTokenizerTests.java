@@ -1,5 +1,17 @@
-/**
- * 
+/*
+ * Copyright 2008-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.springframework.batch.sample.domain.trade;
 
@@ -16,25 +28,21 @@ import org.springframework.batch.item.file.transform.LineTokenizer;
  *
  */
 public class CompositeCustomerUpdateLineTokenizerTests {
-
-	StubLineTokenizer customerTokenizer;
-	FieldSet customerFieldSet = new DefaultFieldSet(null);
-	StubLineTokenizer footerTokenizer;
-	FieldSet footerFieldSet = new DefaultFieldSet(null);
-	CompositeCustomerUpdateLineTokenizer compositeTokenizer;
+	private StubLineTokenizer customerTokenizer;
+	private FieldSet customerFieldSet = new DefaultFieldSet(null);
+	private FieldSet footerFieldSet = new DefaultFieldSet(null);
+	private CompositeCustomerUpdateLineTokenizer compositeTokenizer;
 	
 	@Before
 	public void init(){
 		customerTokenizer = new StubLineTokenizer(customerFieldSet);
-		footerTokenizer = new StubLineTokenizer(footerFieldSet);
 		compositeTokenizer = new CompositeCustomerUpdateLineTokenizer();
 		compositeTokenizer.setCustomerTokenizer(customerTokenizer);
-		compositeTokenizer.setFooterTokenizer(footerTokenizer);
+		compositeTokenizer.setFooterTokenizer(new StubLineTokenizer(footerFieldSet));
 	}
 	
 	@Test
 	public void testCustomerAdd() throws Exception{
-		
 		String customerAddLine = "AFDASFDASFDFSA";
 		FieldSet fs = compositeTokenizer.tokenize(customerAddLine);
 		assertEquals(customerFieldSet, fs);
@@ -43,7 +51,6 @@ public class CompositeCustomerUpdateLineTokenizerTests {
 	
 	@Test
 	public void testCustomerDelete() throws Exception{
-		
 		String customerAddLine = "DFDASFDASFDFSA";
 		FieldSet fs = compositeTokenizer.tokenize(customerAddLine);
 		assertEquals(customerFieldSet, fs);
@@ -52,7 +59,6 @@ public class CompositeCustomerUpdateLineTokenizerTests {
 	
 	@Test
 	public void testCustomerUpdate() throws Exception{
-		
 		String customerAddLine = "UFDASFDASFDFSA";
 		FieldSet fs = compositeTokenizer.tokenize(customerAddLine);
 		assertEquals(customerFieldSet, fs);
@@ -61,21 +67,19 @@ public class CompositeCustomerUpdateLineTokenizerTests {
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidLine() throws Exception{
-		
 		String invalidLine = "INVALID";
 		compositeTokenizer.tokenize(invalidLine);
 	}
-	
-	
-	private static class StubLineTokenizer implements LineTokenizer{
 
+	private static class StubLineTokenizer implements LineTokenizer{
 		private final FieldSet fieldSetToReturn;
 		private String tokenizedLine;
 		
 		public StubLineTokenizer(FieldSet fieldSetToReturn) {
 			this.fieldSetToReturn = fieldSetToReturn;
 		}
-		
+
+		@Override
 		public FieldSet tokenize(String line) {
 			this.tokenizedLine = line;
 			return fieldSetToReturn;

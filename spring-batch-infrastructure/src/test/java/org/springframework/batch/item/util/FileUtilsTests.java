@@ -1,17 +1,34 @@
+/*
+ * Copyright 2008-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.item.util;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-
-import static org.junit.Assert.*;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.util.Assert;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link FileUtils}
@@ -20,7 +37,7 @@ import org.springframework.util.Assert;
  */
 public class FileUtilsTests {
 
-	private File file = new File("target/FileUtilsTests.tmp");
+	private File file = new File("build/FileUtilsTests.tmp");
 
 	/**
 	 * No restart + file should not be overwritten => file is created if it does
@@ -136,6 +153,7 @@ public class FileUtilsTests {
 	@Test
 	public void testBadFile(){
 
+		@SuppressWarnings("serial")
 		File file = new File("new file"){
             @Override
 			public boolean createNewFile() throws IOException {
@@ -155,6 +173,7 @@ public class FileUtilsTests {
 	@Test
 	public void testCouldntCreateFile(){
 
+		@SuppressWarnings("serial")
 		File file = new File("new file"){
 			
 			@Override

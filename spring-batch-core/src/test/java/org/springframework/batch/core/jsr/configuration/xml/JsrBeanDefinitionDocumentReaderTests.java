@@ -1,12 +1,24 @@
+/*
+ * Copyright 2013-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.core.jsr.configuration.xml;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
-import org.springframework.batch.core.jsr.JsrTestUtils;
+import org.springframework.batch.core.jsr.AbstractJsrTestCase;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.xml.DefaultDocumentLoader;
 import org.springframework.beans.factory.xml.DelegatingEntityResolver;
@@ -20,6 +32,9 @@ import org.xml.sax.InputSource;
 
 import javax.batch.api.Batchlet;
 import javax.batch.runtime.JobExecution;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -32,7 +47,7 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author Chris Schaefer
  */
-public class JsrBeanDefinitionDocumentReaderTests {
+public class JsrBeanDefinitionDocumentReaderTests extends AbstractJsrTestCase {
 	private static final String JOB_PARAMETERS_BEAN_DEFINITION_NAME = "jsr_jobParameters";
 
 	private Log logger = LogFactory.getLog(getClass());
@@ -40,6 +55,7 @@ public class JsrBeanDefinitionDocumentReaderTests {
 	private ErrorHandler errorHandler = new SimpleSaxErrorHandler(logger);
 
 	@Test
+	@SuppressWarnings("resource")
 	public void testGetJobParameters() {
 		Properties jobParameters = new Properties();
 		jobParameters.setProperty("jobParameter1", "jobParameter1Value");
@@ -65,6 +81,7 @@ public class JsrBeanDefinitionDocumentReaderTests {
 	public void testGetJobProperties() {
 		Document document = getDocument("/META-INF/batch-jobs/jsrPropertyPreparseTestJob.xml");
 
+		@SuppressWarnings("resource")
 		JsrXmlApplicationContext applicationContext = new JsrXmlApplicationContext();
 		JsrBeanDefinitionDocumentReader documentReader = new JsrBeanDefinitionDocumentReader(applicationContext);
 		documentReader.initProperties(document.getDocumentElement());
@@ -84,6 +101,7 @@ public class JsrBeanDefinitionDocumentReaderTests {
 		jobParameters.setProperty("jobParameter2", "#{jobProperties['jobProperty2']}");
 		jobParameters.setProperty("jobParameter3", "#{jobParameters['jobParameter1']}");
 
+		@SuppressWarnings("resource")
 		JsrXmlApplicationContext applicationContext = new JsrXmlApplicationContext(jobParameters);
 		applicationContext.setValidating(false);
 		applicationContext.load(new ClassPathResource("baseContext.xml"),
@@ -110,6 +128,7 @@ public class JsrBeanDefinitionDocumentReaderTests {
 		Properties jobParameters = new Properties();
 		jobParameters.setProperty("file.name", "myfile.txt");
 
+		@SuppressWarnings("resource")
 		JsrXmlApplicationContext applicationContext = new JsrXmlApplicationContext(jobParameters);
 		applicationContext.setValidating(false);
 		applicationContext.load(new ClassPathResource("baseContext.xml"),
@@ -130,6 +149,7 @@ public class JsrBeanDefinitionDocumentReaderTests {
 		assertEquals("myfile.txt", resolvedProperties.getProperty("jobProperty3"));
 	}
 
+	@SuppressWarnings("resource")
 	@Test
 	public void testGenerationOfBeanDefinitionsForMultipleReferences() throws Exception {
 		JsrXmlApplicationContext applicationContext = new JsrXmlApplicationContext(new Properties());
@@ -149,12 +169,11 @@ public class JsrBeanDefinitionDocumentReaderTests {
 		assertTrue("exitStatusSettingStepListener3ClassBeanDefinition bean definition not found", applicationContext.containsBeanDefinition("org.springframework.batch.core.jsr.step.listener.ExitStatusSettingStepListener3"));
 		assertTrue("testBatchlet bean definition not found", applicationContext.containsBeanDefinition("testBatchlet"));
 		assertTrue("testBatchlet1 bean definition not found", applicationContext.containsBeanDefinition("testBatchlet1"));
-		assertTrue("testBatchlet2 bean definition not found", applicationContext.containsBeanDefinition("testBatchlet2"));
 	}
 
 	@Test
 	public void testArtifactUniqueness() throws Exception {
-		JobExecution jobExecution = JsrTestUtils.runJob("jsrUniqueInstanceTests", new Properties(), 10000L);
+		JobExecution jobExecution = runJob("jsrUniqueInstanceTests", new Properties(), 10000L);
 		String exitStatus = jobExecution.getExitStatus();
 
 		assertTrue("Exit status must contain listener3", exitStatus.contains("listener3"));
@@ -185,6 +204,7 @@ public class JsrBeanDefinitionDocumentReaderTests {
 	}
 
 	@Test
+	@SuppressWarnings("resource")
 	public void testGenerationOfSpringBeanDefinitionsForMultipleReferences() {
 		JsrXmlApplicationContext applicationContext = new JsrXmlApplicationContext(new Properties());
 		applicationContext.setValidating(false);
@@ -214,10 +234,8 @@ public class JsrBeanDefinitionDocumentReaderTests {
 
 	@Test
 	public void testSpringArtifactUniqueness() throws Exception {
-		JobExecution jobExecution = JsrTestUtils.runJob("jsrSpringInstanceTests", new Properties(), 10000L);
+		JobExecution jobExecution = runJob("jsrSpringInstanceTests", new Properties(), 10000L);
 		String exitStatus = jobExecution.getExitStatus();
-
-		assertEquals("listener1listener1listener4listener4", exitStatus);
 
 		assertTrue("Exit status must contain listener1", exitStatus.contains("listener1"));
 		assertTrue("exitStatus must contain 2 listener1 values", StringUtils.countOccurrencesOf(exitStatus, "listener1") == 2);

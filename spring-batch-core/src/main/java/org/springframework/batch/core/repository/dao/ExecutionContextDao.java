@@ -57,7 +57,7 @@ public interface ExecutionContextDao<JE, SE> {
 	/**
 	 * Persist the execution context associated with each stepExecution in a given collection,
 	 * persistent entry for the context should not exist yet.
-	 * @param stepExecution
+	 * @param stepExecutions
 	 */
 	void saveStepExecutionContexts(final Collection<SE> stepExecutions);
 

@@ -16,16 +16,6 @@
 
 package org.springframework.batch.retry.jms;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,6 +37,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.ClassUtils;
+
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "/org/springframework/batch/jms/jms-context.xml")
@@ -98,7 +97,7 @@ public class SynchronousTests {
 	}
 
 	private void assertInitialState() {
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(0, count);
 	}
 
@@ -124,13 +123,15 @@ public class SynchronousTests {
 		final String text = (String) jmsTemplate.receiveAndConvert("queue");
 		assertNotNull(text);
 
-		retryTemplate.execute(new RetryCallback<String>() {
+		retryTemplate.execute(new RetryCallback<String, Exception>() {
+			@Override
 			public String doWithRetry(RetryContext status) throws Exception {
 
 				TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 				transactionTemplate.setPropagationBehavior(TransactionTemplate.PROPAGATION_NESTED);
-				return (String) transactionTemplate.execute(new TransactionCallback() {
-					public Object doInTransaction(TransactionStatus status) {
+				return transactionTemplate.execute(new TransactionCallback<String>() {
+					@Override
+					public String doInTransaction(TransactionStatus status) {
 
 						list.add(text);
 						System.err.println("Inserting: [" + list.size() + "," + text + "]");
@@ -151,7 +152,7 @@ public class SynchronousTests {
 		List<String> msgs = getMessages();
 
 		// The database portion committed once...
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(1, count);
 
 		// ... and so did the message session.
@@ -172,15 +173,17 @@ public class SynchronousTests {
 		jmsTemplate.setDefaultDestinationName("queue");
 		provider.setJmsTemplate(jmsTemplate);
 
-		final Object item = provider.read();
+		final String item = (String) provider.read();
 
-		retryTemplate.execute(new RetryCallback<String>() {
+		retryTemplate.execute(new RetryCallback<String, Exception>() {
+			@Override
 			public String doWithRetry(RetryContext context) throws Exception {
 
 				TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 				transactionTemplate.setPropagationBehavior(TransactionTemplate.PROPAGATION_NESTED);
-				return (String) transactionTemplate.execute(new TransactionCallback() {
-					public Object doInTransaction(TransactionStatus status) {
+				return transactionTemplate.execute(new TransactionCallback<String>() {
+					@Override
+					public String doInTransaction(TransactionStatus status) {
 
 						list.add(item);
 						System.err.println("Inserting: [" + list.size() + "," + item + "]");
@@ -202,7 +205,7 @@ public class SynchronousTests {
 		List<String> msgs = getMessages();
 
 		// The database portion committed once...
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(1, count);
 
 		// ... and so did the message session.
@@ -229,19 +232,22 @@ public class SynchronousTests {
 
 		TransactionTemplate outerTxTemplate = new TransactionTemplate(transactionManager);
 		outerTxTemplate.setPropagationBehavior(TransactionTemplate.PROPAGATION_REQUIRES_NEW);
-		outerTxTemplate.execute(new TransactionCallback() {
-			public Object doInTransaction(TransactionStatus outerStatus) {
+		outerTxTemplate.execute(new TransactionCallback<Void>() {
+			@Override
+			public Void doInTransaction(TransactionStatus outerStatus) {
 
 				final String text = (String) jmsTemplate.receiveAndConvert("queue");
 
 				try {
-					retryTemplate.execute(new RetryCallback<String>() {
+					retryTemplate.execute(new RetryCallback<String, Exception>() {
+						@Override
 						public String doWithRetry(RetryContext status) throws Exception {
 
 							TransactionTemplate nestedTxTemplate = new TransactionTemplate(transactionManager);
 							nestedTxTemplate.setPropagationBehavior(TransactionTemplate.PROPAGATION_NESTED);
-							return (String) nestedTxTemplate.execute(new TransactionCallback() {
-								public Object doInTransaction(TransactionStatus nestedStatus) {
+							return nestedTxTemplate.execute(new TransactionCallback<String>() {
+								@Override
+								public String doInTransaction(TransactionStatus nestedStatus) {
 
 									list.add(text);
 									System.err.println("Inserting: [" + list.size() + "," + text + "]");
@@ -258,7 +264,7 @@ public class SynchronousTests {
 				}
 
 				// The nested database transaction has committed...
-				int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+				int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 				assertEquals(1, count);
 
 				// force rollback...
@@ -268,12 +274,12 @@ public class SynchronousTests {
 			}
 		});
 
-		// Verify the state after stransactional processing is complete
+		// Verify the state after transactional processing is complete
 
 		List<String> msgs = getMessages();
 
 		// The database portion rolled back...
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(0, count);
 
 		// ... and so did the message session.
@@ -290,14 +296,16 @@ public class SynchronousTests {
 
 		assertInitialState();
 
-		retryTemplate.execute(new RetryCallback<String>() {
+		retryTemplate.execute(new RetryCallback<String, Exception>() {
+			@Override
 			public String doWithRetry(RetryContext status) throws Exception {
 
 				// use REQUIRES_NEW  so that the retry executes in its own transaction
 				TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 				transactionTemplate.setPropagationBehavior(TransactionTemplate.PROPAGATION_REQUIRES_NEW);
-				return (String) transactionTemplate.execute(new TransactionCallback() {
-					public Object doInTransaction(TransactionStatus status) {
+				return transactionTemplate.execute(new TransactionCallback<String>() {
+					@Override
+					public String doInTransaction(TransactionStatus status) {
 
 						// The receive is inside the retry and the
 						// transaction...
@@ -315,12 +323,12 @@ public class SynchronousTests {
 			}
 		});
 
-		// Verify the state after stransactional processing is complete
+		// Verify the state after transactional processing is complete
 
 		List<String> msgs = getMessages();
 
 		// The database portion committed once...
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(1, count);
 
 		// ... and so did the message session.
@@ -338,14 +346,16 @@ public class SynchronousTests {
 
 		try {
 
-			retryTemplate.execute(new RetryCallback<String>() {
+			retryTemplate.execute(new RetryCallback<String, Exception>() {
+				@Override
 				public String doWithRetry(RetryContext status) throws Exception {
 
 					// use REQUIRES_NEW  so that the retry executes in its own transaction
 					TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 					transactionTemplate.setPropagationBehavior(TransactionTemplate.PROPAGATION_REQUIRES_NEW);
-					return (String) transactionTemplate.execute(new TransactionCallback() {
-						public Object doInTransaction(TransactionStatus status) {
+					return transactionTemplate.execute(new TransactionCallback<String>() {
+						@Override
+						public String doInTransaction(TransactionStatus status) {
 
 							// The receive is inside the retry and the
 							// transaction...
@@ -377,7 +387,7 @@ public class SynchronousTests {
 		List<String> msgs = getMessages();
 
 		// The database portion rolled back...
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(0, count);
 
 		// ... and so did the message session.

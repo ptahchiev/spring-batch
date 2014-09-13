@@ -16,8 +16,6 @@
 
 package org.springframework.batch.item.jms;
 
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.item.ItemWriter;
@@ -25,13 +23,15 @@ import org.springframework.jms.core.JmsOperations;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.util.Assert;
 
+import java.util.List;
+
 /**
  * An {@link ItemWriter} for JMS using a {@link JmsTemplate}. The template
  * should have a default destination, which will be used to send items in
- * {@link #write(List)}.<br/>
- * <br/>
+ * {@link #write(List)}.<br>
+ * <br>
  * 
- * The implementation is thread safe after its properties are set (normal
+ * The implementation is thread-safe after its properties are set (normal
  * singleton behavior).
  * 
  * @author Dave Syer
@@ -61,7 +61,7 @@ public class JmsItemWriter<T> implements ItemWriter<T> {
 	}
 
 	/**
-	 * Send the items one-by-one to the default destination of the jms template.
+	 * Send the items one-by-one to the default destination of the JMS template.
 	 * 
 	 * @see org.springframework.batch.item.ItemWriter#write(java.util.List)
 	 */

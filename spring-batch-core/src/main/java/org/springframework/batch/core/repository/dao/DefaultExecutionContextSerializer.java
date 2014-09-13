@@ -15,16 +15,18 @@
  */
 package org.springframework.batch.core.repository.dao;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import org.springframework.batch.core.repository.ExecutionContextSerializer;
 import org.springframework.core.serializer.DefaultDeserializer;
 import org.springframework.core.serializer.DefaultSerializer;
 import org.springframework.core.serializer.Deserializer;
 import org.springframework.core.serializer.Serializer;
 import org.springframework.util.Assert;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.util.Map;
 
 /**
  * An implementation of the {@link ExecutionContextSerializer} using the default
@@ -49,10 +51,13 @@ public class DefaultExecutionContextSerializer implements ExecutionContextSerial
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public void serialize(Object context, OutputStream out) throws IOException {
+	public void serialize(Map<String, Object> context, OutputStream out) throws IOException {
 		Assert.notNull(context);
 		Assert.notNull(out);
 
+		for(Object value : context.values()) {
+			Assert.isInstanceOf(Serializable.class, value, "Value: [ " + value + "must be serializable.");
+		}
 		serializer.serialize(context, out);
 	}
 
@@ -62,9 +67,10 @@ public class DefaultExecutionContextSerializer implements ExecutionContextSerial
 	 * @param inputStream
 	 * @return the object serialized in the provided {@link InputStream}
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public Object deserialize(InputStream inputStream) throws IOException {
-		return deserializer.deserialize(inputStream);
+	public Map<String, Object> deserialize(InputStream inputStream) throws IOException {
+		return (Map<String, Object>) deserializer.deserialize(inputStream);
 	}
 
 }

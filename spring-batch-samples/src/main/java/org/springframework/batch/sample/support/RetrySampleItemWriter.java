@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,12 @@ public class RetrySampleItemWriter<T> implements ItemWriter<T> {
 
 	private int counter = 0;
 
+	@Override
 	public void write(List<? extends T> items) throws Exception {
 		int current = counter;
 		counter += items.size();
 		if (current < 3 && (counter >= 2 || counter >= 3)) {
-			throw new RuntimeException("Temporary error");
+			throw new IllegalStateException("Temporary error");
 		}
 	}
 

@@ -16,8 +16,7 @@
 
 package org.springframework.batch.core.explore.support;
 
-import javax.sql.DataSource;
-
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.repository.ExecutionContextSerializer;
 import org.springframework.batch.core.repository.dao.AbstractJdbcBatchMetadataDao;
 import org.springframework.batch.core.repository.dao.ExecutionContextDao;
@@ -39,6 +38,8 @@ import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer
 import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.util.Assert;
 
+import javax.sql.DataSource;
+
 /**
  * A {@link FactoryBean} that automates the creation of a
  * {@link SimpleJobExplorer} using JDBC DAO implementations. Requires the user
@@ -52,7 +53,7 @@ implements InitializingBean {
 
 	private DataSource dataSource;
 
-	private JdbcOperations jdbcTemplate;
+	private JdbcOperations jdbcOperations;
 
 	private String tablePrefix = AbstractJdbcBatchMetadataDao.DEFAULT_TABLE_PREFIX;
 
@@ -71,7 +72,7 @@ implements InitializingBean {
 	 * A custom implementation of the {@link ExecutionContextSerializer}.
 	 * The default, if not injected, is the {@link XStreamExecutionContextStringSerializer}.
 	 *
-	 * @param serializer
+	 * @param serializer used to serialize/deserialize an {@link org.springframework.batch.item.ExecutionContext}
 	 * @see ExecutionContextSerializer
 	 */
 	public void setSerializer(ExecutionContextSerializer serializer) {
@@ -87,11 +88,20 @@ implements InitializingBean {
 	public void setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
+	
+	/**
+	 * Public setter for the {@link JdbcOperations}. If this property is not set explicitly,
+	 * a new {@link JdbcTemplate} will be created for the configured DataSource by default.
+	 * @param jdbcOperations a {@link JdbcOperations}
+	 */
+	public void setJdbcOperations(JdbcOperations jdbcOperations) {
+		this.jdbcOperations = jdbcOperations;
+	}	
 
 	/**
 	 * Sets the table prefix for all the batch meta-data tables.
 	 *
-	 * @param tablePrefix
+	 * @param tablePrefix prefix for the batch meta-data tables
 	 */
 	public void setTablePrefix(String tablePrefix) {
 		this.tablePrefix = tablePrefix;
@@ -101,7 +111,7 @@ implements InitializingBean {
 	 * The lob handler to use when saving {@link ExecutionContext} instances.
 	 * Defaults to null which works for most databases.
 	 *
-	 * @param lobHandler
+	 * @param lobHandler Large object handler for saving {@link org.springframework.batch.item.ExecutionContext}
 	 */
 	public void setLobHandler(LobHandler lobHandler) {
 		this.lobHandler = lobHandler;
@@ -112,7 +122,9 @@ implements InitializingBean {
 
 		Assert.notNull(dataSource, "DataSource must not be null.");
 
-		jdbcTemplate = new JdbcTemplate(dataSource);
+		if (jdbcOperations == null) {
+			jdbcOperations = new JdbcTemplate(dataSource);	
+		}	
 
 		if(serializer == null) {
 			XStreamExecutionContextStringSerializer defaultSerializer = new XStreamExecutionContextStringSerializer();
@@ -122,7 +134,7 @@ implements InitializingBean {
 		}
 	}
 
-	private Object getTarget() throws Exception {
+	private JobExplorer getTarget() throws Exception {
 		return new SimpleJobExplorer(createJobInstanceDao(),
 				createJobExecutionDao(), createStepExecutionDao(),
 				createExecutionContextDao());
@@ -131,7 +143,7 @@ implements InitializingBean {
 	@Override
 	protected ExecutionContextDao createExecutionContextDao() throws Exception {
 		JdbcExecutionContextDao dao = new JdbcExecutionContextDao();
-		dao.setJdbcTemplate(jdbcTemplate);
+		dao.setJdbcTemplate(jdbcOperations);
 		dao.setLobHandler(lobHandler);
 		dao.setTablePrefix(tablePrefix);
 		dao.setSerializer(serializer);
@@ -142,7 +154,7 @@ implements InitializingBean {
 	@Override
 	protected JobInstanceDao createJobInstanceDao() throws Exception {
 		JdbcJobInstanceDao dao = new JdbcJobInstanceDao();
-		dao.setJdbcTemplate(jdbcTemplate);
+		dao.setJdbcTemplate(jdbcOperations);
 		dao.setJobIncrementer(incrementer);
 		dao.setTablePrefix(tablePrefix);
 		dao.afterPropertiesSet();
@@ -152,7 +164,7 @@ implements InitializingBean {
 	@Override
 	protected JobExecutionDao createJobExecutionDao() throws Exception {
 		JdbcJobExecutionDao dao = new JdbcJobExecutionDao();
-		dao.setJdbcTemplate(jdbcTemplate);
+		dao.setJdbcTemplate(jdbcOperations);
 		dao.setJobExecutionIncrementer(incrementer);
 		dao.setTablePrefix(tablePrefix);
 		dao.afterPropertiesSet();
@@ -162,7 +174,7 @@ implements InitializingBean {
 	@Override
 	protected StepExecutionDao createStepExecutionDao() throws Exception {
 		JdbcStepExecutionDao dao = new JdbcStepExecutionDao();
-		dao.setJdbcTemplate(jdbcTemplate);
+		dao.setJdbcTemplate(jdbcOperations);
 		dao.setStepExecutionIncrementer(incrementer);
 		dao.setTablePrefix(tablePrefix);
 		dao.afterPropertiesSet();
@@ -170,7 +182,7 @@ implements InitializingBean {
 	}
 
 	@Override
-	public Object getObject() throws Exception {
+	public JobExplorer getObject() throws Exception {
 		return getTarget();
 	}
 }

@@ -16,25 +16,6 @@
 
 package org.springframework.batch.core.configuration.xml;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
-
-import javax.batch.api.chunk.listener.RetryProcessListener;
-import javax.batch.api.chunk.listener.RetryReadListener;
-import javax.batch.api.chunk.listener.RetryWriteListener;
-import javax.batch.api.chunk.listener.SkipProcessListener;
-import javax.batch.api.chunk.listener.SkipReadListener;
-import javax.batch.api.chunk.listener.SkipWriteListener;
-import javax.batch.api.partition.PartitionAnalyzer;
-import javax.batch.api.partition.PartitionCollector;
-
 import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.ItemProcessListener;
 import org.springframework.batch.core.ItemReadListener;
@@ -98,6 +79,23 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 import org.springframework.util.Assert;
 
+import javax.batch.api.chunk.listener.RetryProcessListener;
+import javax.batch.api.chunk.listener.RetryReadListener;
+import javax.batch.api.chunk.listener.RetryWriteListener;
+import javax.batch.api.chunk.listener.SkipProcessListener;
+import javax.batch.api.chunk.listener.SkipReadListener;
+import javax.batch.api.chunk.listener.SkipWriteListener;
+import javax.batch.api.partition.PartitionCollector;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * This {@link FactoryBean} is used by the batch namespace parser to create {@link Step} objects. Stores all of the
  * properties that are configurable on the &lt;step/&gt; (and its inner &lt;tasklet/&gt;). Based on which properties are
@@ -112,8 +110,7 @@ import org.springframework.util.Assert;
  * @see TaskletStep
  * @since 2.0
  */
-@SuppressWarnings("rawtypes")
-public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAware {
+public class StepParserStepFactoryBean<I, O> implements FactoryBean<Step>, BeanNameAware {
 
 	//
 	// Step Attributes
@@ -245,14 +242,14 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 	private StepExecutionAggregator stepExecutionAggregator;
 
 	/**
-	 * @param queue The {@link Queue} that is used for communication between {@link PartitionCollector} and {@link PartitionAnalyzer}
+	 * @param queue The {@link Queue} that is used for communication between {@link javax.batch.api.partition.PartitionCollector} and {@link javax.batch.api.partition.PartitionAnalyzer}
 	 */
 	public void setPartitionQueue(Queue<Serializable> queue) {
 		this.partitionQueue = queue;
 	}
 
 	/**
-	 * Used to coordinate access to the partition queue between the {@link PartitionCollector} and {@link PartitionAnalyzer}
+	 * Used to coordinate access to the partition queue between the {@link javax.batch.api.partition.PartitionCollector} and {@link javax.batch.api.partition.AbstractPartitionAnalyzer}
 	 *
 	 * @param lock a lock that will be locked around accessing the partition queue
 	 */
@@ -266,7 +263,7 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 	 * @see FactoryBean#getObject()
 	 */
 	@Override
-	public Object getObject() throws Exception {
+	public Step getObject() throws Exception {
 		if (hasChunkElement) {
 			Assert.isNull(tasklet, "Step [" + name
 					+ "] has both a <chunk/> element and a 'ref' attribute  referencing a Tasklet.");
@@ -364,6 +361,10 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 			builder.processorNonTransactional();
 		}
 
+		if (readerTransactionalQueue!=null && readerTransactionalQueue==true) {
+			builder.readerIsTransactionalQueue();
+		}
+
 		for (SkipListener<I, O> listener : skipListeners) {
 			builder.listener(listener);
 		}
@@ -442,9 +443,8 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	protected Step createSimpleStep() {
-		SimpleStepBuilder builder = getSimpleStepBuilder(name);
+		SimpleStepBuilder<I, O> builder = getSimpleStepBuilder(name);
 
 		setChunk(builder);
 
@@ -456,7 +456,7 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 		return builder.build();
 	}
 
-	protected void setChunk(SimpleStepBuilder builder) {
+	protected void setChunk(SimpleStepBuilder<I, O> builder) {
 		if (commitInterval != null) {
 			builder.chunk(commitInterval);
 		}
@@ -467,9 +467,8 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 		return this.chunkCompletionPolicy;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected SimpleStepBuilder getSimpleStepBuilder(String stepName) {
-		return new SimpleStepBuilder(new StepBuilder(stepName));
+	protected SimpleStepBuilder<I, O> getSimpleStepBuilder(String stepName) {
+		return new SimpleStepBuilder<I, O>(new StepBuilder(stepName));
 	}
 
 	/**
@@ -818,15 +817,15 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 				skipListeners.add(skipListener);
 			}
 			if(listener instanceof SkipReadListener) {
-				SkipListener skipListener = new SkipListenerAdapter((SkipReadListener) listener, null, null);
+				SkipListener<I, O> skipListener = new SkipListenerAdapter<I, O>((SkipReadListener) listener, null, null);
 				skipListeners.add(skipListener);
 			}
 			if(listener instanceof SkipProcessListener) {
-				SkipListener skipListener = new SkipListenerAdapter(null,(SkipProcessListener) listener, null);
+				SkipListener<I, O> skipListener = new SkipListenerAdapter<I, O>(null,(SkipProcessListener) listener, null);
 				skipListeners.add(skipListener);
 			}
 			if(listener instanceof SkipWriteListener) {
-				SkipListener skipListener = new SkipListenerAdapter(null, null, (SkipWriteListener) listener);
+				SkipListener<I, O> skipListener = new SkipListenerAdapter<I, O>(null, null, (SkipWriteListener) listener);
 				skipListeners.add(skipListener);
 			}
 			if (listener instanceof StepExecutionListener) {
@@ -850,7 +849,7 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 				readListeners.add(readListener);
 			}
 			if(listener instanceof javax.batch.api.chunk.listener.ItemReadListener) {
-				ItemReadListener itemListener = new ItemReadListenerAdapter((javax.batch.api.chunk.listener.ItemReadListener) listener);
+				ItemReadListener<I> itemListener = new ItemReadListenerAdapter<I>((javax.batch.api.chunk.listener.ItemReadListener) listener);
 				readListeners.add(itemListener);
 			}
 			if (listener instanceof ItemWriteListener) {
@@ -858,7 +857,7 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 				writeListeners.add(writeListener);
 			}
 			if(listener instanceof javax.batch.api.chunk.listener.ItemWriteListener) {
-				ItemWriteListener itemListener = new ItemWriteListenerAdapter((javax.batch.api.chunk.listener.ItemWriteListener) listener);
+				ItemWriteListener<O> itemListener = new ItemWriteListenerAdapter<O>((javax.batch.api.chunk.listener.ItemWriteListener) listener);
 				writeListeners.add(itemListener);
 			}
 			if (listener instanceof ItemProcessListener) {
@@ -866,7 +865,7 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 				processListeners.add(processListener);
 			}
 			if(listener instanceof javax.batch.api.chunk.listener.ItemProcessListener) {
-				ItemProcessListener itemListener = new ItemProcessListenerAdapter((javax.batch.api.chunk.listener.ItemProcessListener) listener);
+				ItemProcessListener<I,O> itemListener = new ItemProcessListenerAdapter<I, O>((javax.batch.api.chunk.listener.ItemProcessListener) listener);
 				processListeners.add(itemListener);
 			}
 			if(listener instanceof RetryReadListener) {
@@ -962,11 +961,11 @@ public class StepParserStepFactoryBean<I, O> implements FactoryBean, BeanNameAwa
 	/**
 	 * Public setter for the capacity of the cache in the retry policy. If more items than this fail without being
 	 * skipped or recovered an exception will be thrown. This is to guard against inadvertent infinite loops generated
-	 * by item identity problems.<br/>
-	 * <p/>
+	 * by item identity problems.<br>
+	 * <br>
 	 * The default value should be high enough and more for most purposes. To breach the limit in a single-threaded step
 	 * typically you have to have this many failures in a single transaction. Defaults to the value in the
-	 * {@link MapRetryContextCache}.<br/>
+	 * {@link MapRetryContextCache}.<br>
 	 *
 	 * @param cacheCapacity the cache capacity to set (greater than 0 else ignored)
 	 */

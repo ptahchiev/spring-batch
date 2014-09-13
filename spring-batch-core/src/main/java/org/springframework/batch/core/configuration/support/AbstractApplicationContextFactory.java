@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,6 @@
  */
 
 package org.springframework.batch.core.configuration.support;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,6 +34,11 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * {@link ApplicationContextFactory} implementation that takes a parent context and a path to the context to create.
  * When createApplicationContext method is called, the child {@link ApplicationContext} will be returned. The child
@@ -49,7 +50,7 @@ public abstract class AbstractApplicationContextFactory implements ApplicationCo
 
 	private static final Log logger = LogFactory.getLog(AbstractApplicationContextFactory.class);
 
-	private Object resource;
+	private Object[] resources;
 
 	private ConfigurableApplicationContext parent;
 
@@ -60,12 +61,12 @@ public abstract class AbstractApplicationContextFactory implements ApplicationCo
 	private Collection<Class<?>> beanPostProcessorExcludeClasses;
 
 	/**
-	 * Create a factory instance with the resource specified. The resource is a Spring configuration file or java
-	 * package containing configuration files.
+	 * Create a factory instance with the resource specified. The resources are Spring configuration files or java
+	 * packages containing configuration files.
 	 */
-	public AbstractApplicationContextFactory(Object resource) {
+	public AbstractApplicationContextFactory(Object... resource) {
 
-		this.resource = resource;
+		this.resources = resource;
 		beanFactoryPostProcessorClasses = new ArrayList<Class<? extends BeanFactoryPostProcessor>>();
 		beanFactoryPostProcessorClasses.add(PropertyPlaceholderConfigurer.class);
 		beanFactoryPostProcessorClasses.add(PropertySourcesPlaceholderConfigurer.class);
@@ -162,16 +163,16 @@ public abstract class AbstractApplicationContextFactory implements ApplicationCo
 	@Override
 	public ConfigurableApplicationContext createApplicationContext() {
 
-		if (resource == null) {
+		if (resources == null || resources.length == 0) {
 			return parent;
 		}
 
-		return createApplicationContext(parent, resource);
+		return createApplicationContext(parent, resources);
 
 	}
 
 	protected abstract ConfigurableApplicationContext createApplicationContext(ConfigurableApplicationContext parent,
-			Object resource);
+			Object... resources);
 
 	/**
 	 * Extension point for special subclasses that want to do more complex things with the context prior to refresh. The
@@ -215,7 +216,7 @@ public abstract class AbstractApplicationContextFactory implements ApplicationCo
 
 	@Override
 	public String toString() {
-		return "ApplicationContextFactory [resource=" + resource + "]";
+		return "ApplicationContextFactory [resources=" + Arrays.toString(resources) + "]";
 	}
 
 	@Override

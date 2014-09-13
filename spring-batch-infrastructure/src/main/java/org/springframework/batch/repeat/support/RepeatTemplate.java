@@ -16,11 +16,6 @@
 
 package org.springframework.batch.repeat.support;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.repeat.CompletionPolicy;
@@ -35,18 +30,23 @@ import org.springframework.batch.repeat.exception.ExceptionHandler;
 import org.springframework.batch.repeat.policy.DefaultResultCompletionPolicy;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Simple implementation and base class for batch templates implementing
  * {@link RepeatOperations}. Provides a framework including interceptors and
  * policies. Subclasses just need to provide a method that gets the next result
  * and one that waits for all the results to be returned from concurrent
- * processes or threads.<br/>
+ * processes or threads.<br>
  * 
  * N.B. the template accumulates thrown exceptions during the iteration, and
  * they are all processed together when the main loop ends (i.e. finished
  * processing the items). Clients that do not want to stop execution when an
  * exception is thrown can use a specific {@link CompletionPolicy} that does not
- * finish when exceptions are received. This is not the default behaviour.<br/>
+ * finish when exceptions are received. This is not the default behaviour.<br>
  * 
  * Clients that want to take some business action when an exception is thrown by
  * the {@link RepeatCallback} can consider using a custom {@link RepeatListener}
@@ -90,7 +90,7 @@ public class RepeatTemplate implements RepeatOperations {
 	public void registerListener(RepeatListener listener) {
 		List<RepeatListener> list = new ArrayList<RepeatListener>(Arrays.asList(listeners));
 		list.add(listener);
-		listeners = (RepeatListener[]) list.toArray(new RepeatListener[list.size()]);
+		listeners = list.toArray(new RepeatListener[list.size()]);
 	}
 
 	/**
@@ -159,7 +159,7 @@ public class RepeatTemplate implements RepeatOperations {
 	 * 
 	 * @param callback the callback to process each element of the loop.
 	 * 
-	 * @return the aggregate of {@link ContinuationPolicy#canContinue(Object)}
+	 * @return the aggregate of {@link RepeatTemplate#canContinue(RepeatStatus)}
 	 * for all the results from the callback.
 	 * 
 	 */
@@ -248,7 +248,7 @@ public class RepeatTemplate implements RepeatOperations {
 			try {
 
 				if (!deferred.isEmpty()) {
-					Throwable throwable = (Throwable) deferred.iterator().next();
+					Throwable throwable = deferred.iterator().next();
 					logger.debug("Handling fatal exception explicitly (rethrowing first of " + deferred.size() + "): "
 							+ throwable.getClass().getName() + ": " + throwable.getMessage());
 					rethrow(throwable);
@@ -389,7 +389,7 @@ public class RepeatTemplate implements RepeatOperations {
 	 * @return true if the value is {@link RepeatStatus#CONTINUABLE}.
 	 */
 	protected final boolean canContinue(RepeatStatus value) {
-		return ((RepeatStatus) value).isContinuable();
+		return value.isContinuable();
 	}
 
 	private boolean isMarkedComplete(RepeatContext context) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,8 @@ import org.springframework.jmx.export.notification.NotificationPublisherAware;
  * @author Dave Syer
  * @since 1.0
  */
-public class JobExecutionNotificationPublisher implements ApplicationListener, NotificationPublisherAware {
-
-	protected static final Log logger = LogFactory.getLog(JobExecutionNotificationPublisher.class);
+public class JobExecutionNotificationPublisher implements ApplicationListener<SimpleMessageApplicationEvent>, NotificationPublisherAware {
+	private static final Log LOG = LogFactory.getLog(JobExecutionNotificationPublisher.class);
 
 	private NotificationPublisher notificationPublisher;
 
@@ -44,6 +43,7 @@ public class JobExecutionNotificationPublisher implements ApplicationListener, N
 	 * 
 	 * @see org.springframework.jmx.export.notification.NotificationPublisherAware#setNotificationPublisher(org.springframework.jmx.export.notification.NotificationPublisher)
 	 */
+	@Override
 	public void setNotificationPublisher(NotificationPublisher notificationPublisher) {
 		this.notificationPublisher = notificationPublisher;
 	}
@@ -55,12 +55,11 @@ public class JobExecutionNotificationPublisher implements ApplicationListener, N
 	 * 
 	 * @see ApplicationListener#onApplicationEvent(ApplicationEvent) 
 	 */
-	public void onApplicationEvent(ApplicationEvent applicationEvent) {
-		if (applicationEvent instanceof SimpleMessageApplicationEvent) {
-			String message = applicationEvent.toString();
-			logger.info(message);
-			publish(message);
-		}
+	@Override
+	public void onApplicationEvent(SimpleMessageApplicationEvent applicationEvent) {
+		String message = applicationEvent.toString();
+		LOG.info(message);
+		publish(message);
 	}
 
 	/**
@@ -82,5 +81,4 @@ public class JobExecutionNotificationPublisher implements ApplicationListener, N
 			notificationPublisher.sendNotification(notification);
 		}
 	}
-
 }

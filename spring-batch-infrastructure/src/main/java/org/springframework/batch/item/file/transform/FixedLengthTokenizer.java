@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import java.util.List;
  * @author peter.zozom
  * @author Dave Syer
  * @author Lucas Ward
+ * @author Michael Minella
  */
 public class FixedLengthTokenizer extends AbstractLineTokenizer {
 
@@ -90,7 +91,7 @@ public class FixedLengthTokenizer extends AbstractLineTokenizer {
 	 * Yields the tokens resulting from the splitting of the supplied
 	 * <code>line</code>.
 	 * 
-	 * @param line the line to be tokenised (can be <code>null</code>)
+	 * @param line the line to be tokenized (can be <code>null</code>)
 	 * 
 	 * @return the resulting tokens (empty if the line is null)
 	 * @throws IncorrectLineLengthException if line length is greater than or
@@ -105,11 +106,11 @@ public class FixedLengthTokenizer extends AbstractLineTokenizer {
 		lineLength = line.length();
 
 		if (lineLength < maxRange && isStrict()) {
-			throw new IncorrectLineLengthException("Line is shorter than max range " + maxRange, maxRange, lineLength);
+			throw new IncorrectLineLengthException("Line is shorter than max range " + maxRange, maxRange, lineLength, line);
 		}
 
 		if (!open && lineLength > maxRange && isStrict()) {
-			throw new IncorrectLineLengthException("Line is longer than max range " + maxRange, maxRange, lineLength);
+			throw new IncorrectLineLengthException("Line is longer than max range " + maxRange, maxRange, lineLength, line);
 		}
 
 		for (int i = 0; i < ranges.length; i++) {

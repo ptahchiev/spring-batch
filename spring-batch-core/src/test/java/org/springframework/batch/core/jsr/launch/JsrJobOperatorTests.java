@@ -15,35 +15,6 @@
  */
 package org.springframework.batch.core.jsr.launch;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.batch.core.jsr.JsrTestUtils.restartJob;
-import static org.springframework.batch.core.jsr.JsrTestUtils.runJob;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.batch.api.AbstractBatchlet;
-import javax.batch.api.Batchlet;
-import javax.batch.operations.JobExecutionIsRunningException;
-import javax.batch.operations.JobOperator;
-import javax.batch.operations.JobRestartException;
-import javax.batch.operations.JobStartException;
-import javax.batch.operations.NoSuchJobException;
-import javax.batch.operations.NoSuchJobExecutionException;
-import javax.batch.operations.NoSuchJobInstanceException;
-import javax.batch.runtime.BatchRuntime;
-import javax.batch.runtime.BatchStatus;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -57,6 +28,7 @@ import org.springframework.batch.core.converter.JobParametersConverter;
 import org.springframework.batch.core.converter.JobParametersConverterSupport;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.explore.support.SimpleJobExplorer;
+import org.springframework.batch.core.jsr.AbstractJsrTestCase;
 import org.springframework.batch.core.jsr.JsrJobParametersConverter;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.JobRepositorySupport;
@@ -64,7 +36,33 @@ import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SyncTaskExecutor;
 
-public class JsrJobOperatorTests {
+import javax.batch.api.AbstractBatchlet;
+import javax.batch.api.Batchlet;
+import javax.batch.operations.JobExecutionIsRunningException;
+import javax.batch.operations.JobOperator;
+import javax.batch.operations.JobRestartException;
+import javax.batch.operations.JobStartException;
+import javax.batch.operations.NoSuchJobException;
+import javax.batch.operations.NoSuchJobExecutionException;
+import javax.batch.operations.NoSuchJobInstanceException;
+import javax.batch.runtime.BatchRuntime;
+import javax.batch.runtime.BatchStatus;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+public class JsrJobOperatorTests extends AbstractJsrTestCase {
 
 	private JobOperator jsrJobOperator;
 	@Mock
@@ -72,7 +70,7 @@ public class JsrJobOperatorTests {
 	@Mock
 	private JobRepository jobRepository;
 	private JobParametersConverter parameterConverter;
-	private static final long TIMEOUT = 10000l;
+	private static final long TIMEOUT = 10000L;
 
 	@Before
 	public void setup() {
@@ -129,11 +127,11 @@ public class JsrJobOperatorTests {
 
 	@Test
 	public void testAbandonRoseyScenario() throws Exception {
-		JobExecution jobExecution = new JobExecution(5l);
+		JobExecution jobExecution = new JobExecution(5L);
 		jobExecution.setEndTime(new Date());
-		when(jobExplorer.getJobExecution(5l)).thenReturn(jobExecution);
+		when(jobExplorer.getJobExecution(5L)).thenReturn(jobExecution);
 
-		jsrJobOperator.abandon(5l);
+		jsrJobOperator.abandon(5L);
 
 		ArgumentCaptor<JobExecution> executionCaptor = ArgumentCaptor.forClass(JobExecution.class);
 		verify(jobRepository).update(executionCaptor.capture());
@@ -143,40 +141,40 @@ public class JsrJobOperatorTests {
 
 	@Test(expected=NoSuchJobExecutionException.class)
 	public void testAbandonNoSuchJob() throws Exception {
-		jsrJobOperator.abandon(5l);
+		jsrJobOperator.abandon(5L);
 	}
 
 	@Test(expected=JobExecutionIsRunningException.class)
 	public void testAbandonJobRunning() throws Exception {
-		JobExecution jobExecution = new JobExecution(5l);
-		when(jobExplorer.getJobExecution(5l)).thenReturn(jobExecution);
+		JobExecution jobExecution = new JobExecution(5L);
+		when(jobExplorer.getJobExecution(5L)).thenReturn(jobExecution);
 
-		jsrJobOperator.abandon(5l);
+		jsrJobOperator.abandon(5L);
 	}
 
 	@Test
 	public void testGetJobExecutionRoseyScenario() {
-		when(jobExplorer.getJobExecution(5l)).thenReturn(new JobExecution(5l));
+		when(jobExplorer.getJobExecution(5L)).thenReturn(new JobExecution(5L));
 
-		assertEquals(5l, jsrJobOperator.getJobExecution(5l).getExecutionId());
+		assertEquals(5L, jsrJobOperator.getJobExecution(5L).getExecutionId());
 	}
 
 	@Test(expected=NoSuchJobExecutionException.class)
 	public void testGetJobExecutionNoExecutionFound() {
-		jsrJobOperator.getJobExecution(5l);
+		jsrJobOperator.getJobExecution(5L);
 	}
 
 	@Test
 	public void testGetJobExecutionsRoseyScenario() {
-		org.springframework.batch.core.JobInstance jobInstance = new org.springframework.batch.core.JobInstance(5l, "my job");
+		org.springframework.batch.core.JobInstance jobInstance = new org.springframework.batch.core.JobInstance(5L, "my job");
 		List<JobExecution> executions = new ArrayList<JobExecution>();
-		executions.add(new JobExecution(2l));
+		executions.add(new JobExecution(2L));
 
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(executions);
 
 		List<javax.batch.runtime.JobExecution> jobExecutions = jsrJobOperator.getJobExecutions(jobInstance);
 		assertEquals(1, jobExecutions.size());
-		assertEquals(2l, executions.get(0).getId().longValue());
+		assertEquals(2L, executions.get(0).getId().longValue());
 	}
 
 	@Test(expected=NoSuchJobInstanceException.class)
@@ -186,14 +184,14 @@ public class JsrJobOperatorTests {
 
 	@Test(expected=NoSuchJobInstanceException.class)
 	public void testGetJobExecutionsNullReturned() {
-		org.springframework.batch.core.JobInstance jobInstance = new org.springframework.batch.core.JobInstance(5l, "my job");
+		org.springframework.batch.core.JobInstance jobInstance = new org.springframework.batch.core.JobInstance(5L, "my job");
 
 		jsrJobOperator.getJobExecutions(jobInstance);
 	}
 
 	@Test(expected=NoSuchJobInstanceException.class)
 	public void testGetJobExecutionsNoneReturned() {
-		org.springframework.batch.core.JobInstance jobInstance = new org.springframework.batch.core.JobInstance(5l, "my job");
+		org.springframework.batch.core.JobInstance jobInstance = new org.springframework.batch.core.JobInstance(5L, "my job");
 		List<JobExecution> executions = new ArrayList<JobExecution>();
 
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(executions);
@@ -203,26 +201,26 @@ public class JsrJobOperatorTests {
 
 	@Test
 	public void testGetJobInstanceRoseyScenario() {
-		JobInstance instance = new JobInstance(1l, "my job");
-		JobExecution execution = new JobExecution(5l);
+		JobInstance instance = new JobInstance(1L, "my job");
+		JobExecution execution = new JobExecution(5L);
 		execution.setJobInstance(instance);
 
-		when(jobExplorer.getJobExecution(5l)).thenReturn(execution);
-		when(jobExplorer.getJobInstance(1l)).thenReturn(instance);
+		when(jobExplorer.getJobExecution(5L)).thenReturn(execution);
+		when(jobExplorer.getJobInstance(1L)).thenReturn(instance);
 
-		javax.batch.runtime.JobInstance jobInstance = jsrJobOperator.getJobInstance(5l);
+		javax.batch.runtime.JobInstance jobInstance = jsrJobOperator.getJobInstance(5L);
 
-		assertEquals(1l, jobInstance.getInstanceId());
+		assertEquals(1L, jobInstance.getInstanceId());
 		assertEquals("my job", jobInstance.getJobName());
 	}
 
 	@Test(expected=NoSuchJobExecutionException.class)
 	public void testGetJobInstanceNoExecution() {
-		JobInstance instance = new JobInstance(1l, "my job");
-		JobExecution execution = new JobExecution(5l);
+		JobInstance instance = new JobInstance(1L, "my job");
+		JobExecution execution = new JobExecution(5L);
 		execution.setJobInstance(instance);
 
-		jsrJobOperator.getJobInstance(5l);
+		jsrJobOperator.getJobInstance(5L);
 	}
 
 	@Test
@@ -249,18 +247,18 @@ public class JsrJobOperatorTests {
 	@Test
 	public void testGetJobInstancesRoseyScenario() {
 		List<JobInstance> instances = new ArrayList<JobInstance>();
-		instances.add(new JobInstance(1l, "myJob"));
-		instances.add(new JobInstance(2l, "myJob"));
-		instances.add(new JobInstance(3l, "myJob"));
+		instances.add(new JobInstance(1L, "myJob"));
+		instances.add(new JobInstance(2L, "myJob"));
+		instances.add(new JobInstance(3L, "myJob"));
 
 		when(jobExplorer.getJobInstances("myJob", 0, 3)).thenReturn(instances);
 
 		List<javax.batch.runtime.JobInstance> jobInstances = jsrJobOperator.getJobInstances("myJob", 0, 3);
 
 		assertEquals(3, jobInstances.size());
-		assertEquals(1l, jobInstances.get(0).getInstanceId());
-		assertEquals(2l, jobInstances.get(1).getInstanceId());
-		assertEquals(3l, jobInstances.get(2).getInstanceId());
+		assertEquals(1L, jobInstances.get(0).getInstanceId());
+		assertEquals(2L, jobInstances.get(1).getInstanceId());
+		assertEquals(3L, jobInstances.get(2).getInstanceId());
 	}
 
 	@Test(expected=NoSuchJobException.class)
@@ -294,11 +292,11 @@ public class JsrJobOperatorTests {
 
 	@Test
 	public void testGetParametersRoseyScenario() {
-		JobExecution jobExecution = new JobExecution(5l, new JobParametersBuilder().addString("key1", "value1").addLong(JsrJobParametersConverter.JOB_RUN_ID, 5l).toJobParameters());
+		JobExecution jobExecution = new JobExecution(5L, new JobParametersBuilder().addString("key1", "value1").addLong(JsrJobParametersConverter.JOB_RUN_ID, 5L).toJobParameters());
 
-		when(jobExplorer.getJobExecution(5l)).thenReturn(jobExecution);
+		when(jobExplorer.getJobExecution(5L)).thenReturn(jobExecution);
 
-		Properties params = jsrJobOperator.getParameters(5l);
+		Properties params = jsrJobOperator.getParameters(5L);
 
 		assertEquals("value1", params.get("key1"));
 		assertNull(params.get(JsrJobParametersConverter.JOB_RUN_ID));
@@ -306,7 +304,7 @@ public class JsrJobOperatorTests {
 
 	@Test(expected=NoSuchJobExecutionException.class)
 	public void testGetParametersNoExecution() {
-		jsrJobOperator.getParameters(5l);
+		jsrJobOperator.getParameters(5L);
 	}
 
 	@Test(expected=NoSuchJobException.class)
@@ -321,26 +319,26 @@ public class JsrJobOperatorTests {
 	@Test
 	public void testGetRunningExecutions() {
 		Set<JobExecution> executions = new HashSet<JobExecution>();
-		executions.add(new JobExecution(5l));
+		executions.add(new JobExecution(5L));
 
 		when(jobExplorer.findRunningJobExecutions("myJob")).thenReturn(executions);
 
-		assertEquals(5l, jsrJobOperator.getRunningExecutions("myJob").get(0).longValue());
+		assertEquals(5L, jsrJobOperator.getRunningExecutions("myJob").get(0).longValue());
 	}
 
 	@Test
 	public void testGetStepExecutionsRoseyScenario() {
-		JobExecution jobExecution = new JobExecution(5l);
+		JobExecution jobExecution = new JobExecution(5L);
 		List<StepExecution> stepExecutions = new ArrayList<StepExecution>();
-		stepExecutions.add(new StepExecution("step1", jobExecution, 1l));
-		stepExecutions.add(new StepExecution("step2", jobExecution, 2l));
+		stepExecutions.add(new StepExecution("step1", jobExecution, 1L));
+		stepExecutions.add(new StepExecution("step2", jobExecution, 2L));
 		jobExecution.addStepExecutions(stepExecutions);
 
-		when(jobExplorer.getJobExecution(5l)).thenReturn(jobExecution);
-		when(jobExplorer.getStepExecution(5l, 1l)).thenReturn(new StepExecution("step1", jobExecution, 1l));
-		when(jobExplorer.getStepExecution(5l, 2l)).thenReturn(new StepExecution("step2", jobExecution, 2l));
+		when(jobExplorer.getJobExecution(5L)).thenReturn(jobExecution);
+		when(jobExplorer.getStepExecution(5L, 1L)).thenReturn(new StepExecution("step1", jobExecution, 1L));
+		when(jobExplorer.getStepExecution(5L, 2L)).thenReturn(new StepExecution("step2", jobExecution, 2L));
 
-		List<javax.batch.runtime.StepExecution> results = jsrJobOperator.getStepExecutions(5l);
+		List<javax.batch.runtime.StepExecution> results = jsrJobOperator.getStepExecutions(5L);
 
 		assertEquals("step1", results.get(0).getStepName());
 		assertEquals("step2", results.get(1).getStepName());
@@ -348,25 +346,25 @@ public class JsrJobOperatorTests {
 
 	@Test(expected=NoSuchJobException.class)
 	public void testGetStepExecutionsNoExecutionReturned() {
-		jsrJobOperator.getStepExecutions(5l);
+		jsrJobOperator.getStepExecutions(5L);
 	}
 
 	@Test
 	public void testGetStepExecutionsPartitionedStepScenario() {
-		JobExecution jobExecution = new JobExecution(5l);
+		JobExecution jobExecution = new JobExecution(5L);
 		List<StepExecution> stepExecutions = new ArrayList<StepExecution>();
-		stepExecutions.add(new StepExecution("step1", jobExecution, 1l));
-		stepExecutions.add(new StepExecution("step2", jobExecution, 2l));
-		stepExecutions.add(new StepExecution("step2:partition0", jobExecution, 2l));
-		stepExecutions.add(new StepExecution("step2:partition1", jobExecution, 2l));
-		stepExecutions.add(new StepExecution("step2:partition2", jobExecution, 2l));
+		stepExecutions.add(new StepExecution("step1", jobExecution, 1L));
+		stepExecutions.add(new StepExecution("step2", jobExecution, 2L));
+		stepExecutions.add(new StepExecution("step2:partition0", jobExecution, 2L));
+		stepExecutions.add(new StepExecution("step2:partition1", jobExecution, 2L));
+		stepExecutions.add(new StepExecution("step2:partition2", jobExecution, 2L));
 		jobExecution.addStepExecutions(stepExecutions);
 
-		when(jobExplorer.getJobExecution(5l)).thenReturn(jobExecution);
-		when(jobExplorer.getStepExecution(5l, 1l)).thenReturn(new StepExecution("step1", jobExecution, 1l));
-		when(jobExplorer.getStepExecution(5l, 2l)).thenReturn(new StepExecution("step2", jobExecution, 2l));
+		when(jobExplorer.getJobExecution(5L)).thenReturn(jobExecution);
+		when(jobExplorer.getStepExecution(5L, 1L)).thenReturn(new StepExecution("step1", jobExecution, 1L));
+		when(jobExplorer.getStepExecution(5L, 2L)).thenReturn(new StepExecution("step2", jobExecution, 2L));
 
-		List<javax.batch.runtime.StepExecution> results = jsrJobOperator.getStepExecutions(5l);
+		List<javax.batch.runtime.StepExecution> results = jsrJobOperator.getStepExecutions(5L);
 
 		assertEquals("step1", results.get(0).getStepName());
 		assertEquals("step2", results.get(1).getStepName());
@@ -374,11 +372,11 @@ public class JsrJobOperatorTests {
 
 	@Test
 	public void testGetStepExecutionsNoStepExecutions() {
-		JobExecution jobExecution = new JobExecution(5l);
+		JobExecution jobExecution = new JobExecution(5L);
 
-		when(jobExplorer.getJobExecution(5l)).thenReturn(jobExecution);
+		when(jobExplorer.getJobExecution(5L)).thenReturn(jobExecution);
 
-		List<javax.batch.runtime.StepExecution> results = jsrJobOperator.getStepExecutions(5l);
+		List<javax.batch.runtime.StepExecution> results = jsrJobOperator.getStepExecutions(5L);
 
 		assertEquals(0, results.size());
 	}
@@ -535,13 +533,25 @@ public class JsrJobOperatorTests {
 		jsrJobOperator = BatchRuntime.getJobOperator();
 		long executionId = jsrJobOperator.start("longRunningJob", null);
 		// Give the job a chance to get started
-		Thread.sleep(1000l);
+		Thread.sleep(1000L);
 		jsrJobOperator.stop(executionId);
 		// Give the job the chance to finish stopping
-		Thread.sleep(1000l);
+		Thread.sleep(1000L);
 
 		assertEquals(BatchStatus.STOPPED, jsrJobOperator.getJobExecution(executionId).getBatchStatus());
 
+	}
+
+	@Test
+	public void testApplicationContextClosingAfterJobSuccessful() throws Exception {
+		for(int i = 0; i < 3; i++) {
+			javax.batch.runtime.JobExecution execution = runJob("contextClosingTests", new Properties(), TIMEOUT);
+
+			assertEquals(BatchStatus.COMPLETED, execution.getBatchStatus());
+
+			// Added to allow time for the context to finish closing before running the job again
+			Thread.sleep(1000l);
+		}
 	}
 
 	public static class LongRunningBatchlet implements Batchlet {
@@ -566,6 +576,27 @@ public class JsrJobOperatorTests {
 		@Override
 		public String process() throws Exception {
 			throw new RuntimeException("blah");
+		}
+	}
+
+	public static class MustBeClosedBatchlet extends AbstractBatchlet {
+
+		public static boolean closed = true;
+
+		public MustBeClosedBatchlet() {
+			if(!closed) {
+				throw new RuntimeException("Batchlet wasn't closed last time");
+			}
+		}
+
+		public void close() {
+			closed = true;
+		}
+
+		@Override
+		public String process() throws Exception {
+			closed = false;
+			return null;
 		}
 	}
 }

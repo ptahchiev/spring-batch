@@ -15,12 +15,6 @@
  */
 package org.springframework.batch.core.configuration.support;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.core.Job;
@@ -35,6 +29,12 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.Assert;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Default implementation of {@link JobLoader}. Uses a {@link JobRegistry} to
@@ -147,6 +147,7 @@ public class DefaultJobLoader implements JobLoader, InitializingBean {
 		return doLoad(factory, false);
 	}
 
+	@SuppressWarnings("resource")
 	private Collection<Job> doLoad(ApplicationContextFactory factory, boolean unregister) throws DuplicateJobException {
 
 		Collection<String> jobNamesBefore = jobRegistry.getJobNames();
@@ -207,7 +208,7 @@ public class DefaultJobLoader implements JobLoader, InitializingBean {
 
 	/**
 	 * Returns all the {@link Step} instances defined by the specified {@link StepLocator}.
-	 * <p/>
+	 * <br>
 	 * The specified <tt>jobApplicationContext</tt> is used to collect additional steps that
 	 * are not exposed by the step locator
 	 *
@@ -226,7 +227,6 @@ public class DefaultJobLoader implements JobLoader, InitializingBean {
 		// Because some steps are referenced by name, we need to look in the context to see if there
 		// are more Step instances defined. Right now they are registered as being available in the
 		// context of the job but we have no idea if they are linked to that Job or not.
-		@SuppressWarnings("unchecked")
 		final Map<String, Step> allSteps = jobApplicationContext.getBeansOfType(Step.class);
 		for (Map.Entry<String, Step> entry : allSteps.entrySet()) {
 			if (!stepNames.contains(entry.getKey())) {
@@ -238,7 +238,7 @@ public class DefaultJobLoader implements JobLoader, InitializingBean {
 
 	/**
 	 * Registers the specified {@link Job} defined in the specified {@link ConfigurableApplicationContext}.
-	 * <p/>
+	 * <br>
 	 * Makes sure to update the {@link StepRegistry} if it is available.
 	 *
 	 * @param context the context in which the job is defined

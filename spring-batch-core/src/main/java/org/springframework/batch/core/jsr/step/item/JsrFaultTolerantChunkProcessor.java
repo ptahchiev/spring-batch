@@ -15,13 +15,11 @@
  */
 package org.springframework.batch.core.jsr.step.item;
 
-import java.util.List;
-
-import javax.batch.operations.BatchRuntimeException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepListener;
+import org.springframework.batch.core.listener.MulticasterBatchListener;
 import org.springframework.batch.core.step.item.BatchRetryTemplate;
 import org.springframework.batch.core.step.item.Chunk;
 import org.springframework.batch.core.step.item.ChunkMonitor;
@@ -42,6 +40,9 @@ import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryException;
 import org.springframework.util.Assert;
 
+import javax.batch.operations.BatchRuntimeException;
+import java.util.List;
+
 /**
  * Extension of the {@link JsrChunkProcessor} that adds skip and retry functionality.
  *
@@ -59,7 +60,7 @@ public class JsrFaultTolerantChunkProcessor<I,O> extends JsrChunkProcessor<I, O>
 	private ChunkMonitor chunkMonitor = new ChunkMonitor();
 	private boolean hasProcessor = false;
 
-	public JsrFaultTolerantChunkProcessor(ItemReader<I> reader, ItemProcessor<I,O> processor, ItemWriter<O> writer, RepeatOperations repeatTemplate, BatchRetryTemplate batchRetryTemplate) {
+	public JsrFaultTolerantChunkProcessor(ItemReader<? extends I> reader, ItemProcessor<? super I, ? extends O> processor, ItemWriter<? super O> writer, RepeatOperations repeatTemplate, BatchRetryTemplate batchRetryTemplate) {
 		super(reader, processor, writer, repeatTemplate);
 		hasProcessor = processor != null;
 		this.batchRetryTemplate = batchRetryTemplate;
@@ -96,7 +97,7 @@ public class JsrFaultTolerantChunkProcessor<I,O> extends JsrChunkProcessor<I, O>
 	 * Register some {@link StepListener}s with the handler. Each will get the
 	 * callbacks in the order specified at the correct stage.
 	 *
-	 * @param listeners
+	 * @param listeners listeners to be registered
 	 */
 	@Override
 	public void setListeners(List<? extends StepListener> listeners) {
@@ -125,7 +126,7 @@ public class JsrFaultTolerantChunkProcessor<I,O> extends JsrChunkProcessor<I, O>
 	 */
 	@Override
 	protected I provide(final StepContribution contribution, final Chunk<I> chunk) throws Exception {
-		RetryCallback<I> retryCallback = new RetryCallback<I>() {
+		RetryCallback<I, Exception> retryCallback = new RetryCallback<I, Exception>() {
 
 			@Override
 			public I doWithRetry(RetryContext arg0) throws Exception {
@@ -216,11 +217,10 @@ public class JsrFaultTolerantChunkProcessor<I,O> extends JsrChunkProcessor<I, O>
 	@SuppressWarnings("unchecked")
 	protected O transform(final StepContribution contribution, final I item) throws Exception {
 		if (!hasProcessor) {
-			O result = (O) item;
-			return result;
+			return (O) item;
 		}
 
-		RetryCallback<O> retryCallback = new RetryCallback<O>() {
+		RetryCallback<O, Exception> retryCallback = new RetryCallback<O, Exception>() {
 
 			@Override
 			public O doWithRetry(RetryContext context) throws Exception {
@@ -288,9 +288,9 @@ public class JsrFaultTolerantChunkProcessor<I,O> extends JsrChunkProcessor<I, O>
 	@Override
 	protected void persist(final StepContribution contribution, final Chunk<O> chunk) throws Exception {
 
-		RetryCallback<Object> retryCallback = new RetryCallback<Object>() {
+		RetryCallback<Object, Exception> retryCallback = new RetryCallback<Object, Exception>() {
 			@Override
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			public Object doWithRetry(RetryContext context) throws Exception {
 
 				chunkMonitor.setChunkSize(chunk.size());
@@ -298,10 +298,11 @@ public class JsrFaultTolerantChunkProcessor<I,O> extends JsrChunkProcessor<I, O>
 					doPersist(contribution, chunk);
 				}
 				catch (Exception e) {
-					if(shouldSkip(skipPolicy, e, contribution.getStepSkipCount())) {
-						getListener().onSkipInWrite(chunk.getItems(), e);
+					if (shouldSkip(skipPolicy, e, contribution.getStepSkipCount())) {
+						// Per section 9.2.7 of JSR-352, the SkipListener receives all the items within the chunk 						 
+						((MulticasterBatchListener) getListener()).onSkipInWrite(chunk.getItems(), e);
 					} else {
-						getListener().onRetryWriteException(chunk.getItems(), e);
+						getListener().onRetryWriteException((List<Object>) chunk.getItems(), e);
 
 						if (rollbackClassifier.classify(e)) {
 							throw e;

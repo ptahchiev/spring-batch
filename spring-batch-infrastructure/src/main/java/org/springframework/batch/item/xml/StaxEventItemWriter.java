@@ -66,7 +66,7 @@ import org.springframework.util.StringUtils;
  * This item writer also provides restart, statistics and transaction features
  * by implementing corresponding interfaces.
  * 
- * The implementation is *not* thread-safe.
+ * The implementation is <b>not</b> thread-safe.
  * 
  * @author Peter Zozom
  * @author Robert Kasanicky
@@ -154,7 +154,7 @@ ResourceAwareItemWriterItemStream<T>, InitializingBean {
 	private boolean restarted = false;
 	
 	// List holding the QName of elements that were opened in the header callback, but not closed
-	private List<QName> unclosedHeaderCallbackElements = Collections.EMPTY_LIST;
+	private List<QName> unclosedHeaderCallbackElements = Collections.emptyList();
 
 	public StaxEventItemWriter() {
 		setExecutionContextName(ClassUtils.getShortName(StaxEventItemWriter.class));
@@ -417,7 +417,6 @@ ResourceAwareItemWriterItemStream<T>, InitializingBean {
 	/**
 	 * Helper method for opening output source at given file position
 	 */
-	@SuppressWarnings("resource")
 	private void open(long position) {
 
 		File file;
@@ -444,13 +443,13 @@ ResourceAwareItemWriterItemStream<T>, InitializingBean {
 			// Woodstox >= 3.2.9 we want to disable its
 			// automatic end element feature (see:
 			// http://jira.codehaus.org/browse/WSTX-165) per
-			// http://jira.springframework.org/browse/BATCH-761).
+			// http://jira.spring.io/browse/BATCH-761).
 			outputFactory.setProperty("com.ctc.wstx.automaticEndElements", Boolean.FALSE);
 		}
 		if (outputFactory.isPropertySupported("com.ctc.wstx.outputValidateStructure")) {
 			// On restart we don't write the root element so we have to disable
 			// structural validation (see:
-			// http://jira.springframework.org/browse/BATCH-1681).
+			// http://jira.spring.io/browse/BATCH-1681).
 			outputFactory.setProperty("com.ctc.wstx.outputValidateStructure", Boolean.FALSE);
 		}
 
@@ -525,7 +524,7 @@ ResourceAwareItemWriterItemStream<T>, InitializingBean {
 	}
 
 	/**
-	 * Subclasses can override to customize the stax result.
+	 * Subclasses can override to customize the STAX result.
 	 * @return a result for writing to
 	 * @throws Exception
 	 */

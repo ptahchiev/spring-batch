@@ -32,6 +32,7 @@ public class TradeCustomerItemWriter implements ItemWriter<CustomerCredit> {
 	private TradeDao dao;
 	private int count;
 
+	@Override
 	public void write(List<? extends CustomerCredit> items) throws Exception {
 		for (CustomerCredit c : items) {
 			Trade t = new Trade("ISIN" + count++, 100, new BigDecimal("1.50"), c.getName());

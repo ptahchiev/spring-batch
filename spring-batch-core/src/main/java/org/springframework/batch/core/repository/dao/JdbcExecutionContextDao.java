@@ -53,7 +53,7 @@ import org.springframework.util.Assert;
  * @author Michael Minella
  * @author David Turanski
  */
-public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implements ExecutionContextDao<JobExecution, StepExecution> {
+public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implements ExecutionContextDao {
 
 	private static final String FIND_JOB_EXECUTION_CONTEXT = "SELECT SHORT_CONTEXT, SERIALIZED_CONTEXT "
 			+ "FROM %PREFIX%JOB_EXECUTION_CONTEXT WHERE JOB_EXECUTION_ID = ?";
@@ -86,7 +86,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	 *
 	 * @param serializer
 	 */
-	public void setSerializer(final ExecutionContextSerializer serializer) {
+	public void setSerializer(ExecutionContextSerializer serializer) {
 		this.serializer = serializer;
 	}
 
@@ -100,16 +100,16 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	 * the column size.
 	 * @param shortContextLength
 	 */
-	public void setShortContextLength(final int shortContextLength) {
+	public void setShortContextLength(int shortContextLength) {
 		this.shortContextLength = shortContextLength;
 	}
 
 	@Override
-	public ExecutionContext getJobExecutionContext(final JobExecution jobExecution) {
-		final Long executionId = jobExecution.getId();
+	public ExecutionContext getExecutionContext(JobExecution jobExecution) {
+		Long executionId = jobExecution.getId();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
 
-		final List<ExecutionContext> results = getJdbcTemplate().query(getQuery(FIND_JOB_EXECUTION_CONTEXT),
+		List<ExecutionContext> results = getJdbcTemplate().query(getQuery(FIND_JOB_EXECUTION_CONTEXT),
 				new ExecutionContextRowMapper(), executionId);
 		if (results.size() > 0) {
 			return results.get(0);
@@ -120,11 +120,11 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public ExecutionContext getStepExecutionContext(final StepExecution stepExecution) {
-		final Long executionId = stepExecution.getId();
+	public ExecutionContext getExecutionContext(StepExecution stepExecution) {
+		Long executionId = stepExecution.getId();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
 
-		final List<ExecutionContext> results = getJdbcTemplate().query(getQuery(FIND_STEP_EXECUTION_CONTEXT),
+		List<ExecutionContext> results = getJdbcTemplate().query(getQuery(FIND_STEP_EXECUTION_CONTEXT),
 				new ExecutionContextRowMapper(), executionId);
 		if (results.size() > 0) {
 			return results.get(0);
@@ -135,62 +135,65 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public void updateJobExecutionContext(final JobExecution jobExecution) {
-		final Long executionId = jobExecution.getId();
-		final ExecutionContext executionContext = jobExecution.getExecutionContext();
+	public void updateExecutionContext(final JobExecution jobExecution) {
+		Long executionId = jobExecution.getId();
+		ExecutionContext executionContext = jobExecution.getExecutionContext();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
 		Assert.notNull(executionContext, "The ExecutionContext must not be null.");
 
-		final String serializedContext = serializeContext(executionContext);
+		String serializedContext = serializeContext(executionContext);
 
 		persistSerializedContext(executionId, serializedContext, UPDATE_JOB_EXECUTION_CONTEXT);
 	}
 
 	@Override
-	public void updateStepExecutionContext(final StepExecution stepExecution) {
+	public void updateExecutionContext(final StepExecution stepExecution) {
+		// Attempt to prevent concurrent modification errors by blocking here if
+		// someone is already trying to do it.
+		synchronized (stepExecution) {
+			Long executionId = stepExecution.getId();
+			ExecutionContext executionContext = stepExecution.getExecutionContext();
+			Assert.notNull(executionId, "ExecutionId must not be null.");
+			Assert.notNull(executionContext, "The ExecutionContext must not be null.");
 
-		final Long executionId = stepExecution.getId();
-		final ExecutionContext executionContext = stepExecution.getExecutionContext();
-		Assert.notNull(executionId, "ExecutionId must not be null.");
-		Assert.notNull(executionContext, "The ExecutionContext must not be null.");
+			String serializedContext = serializeContext(executionContext);
 
-		final String serializedContext = serializeContext(executionContext);
-
-		persistSerializedContext(executionId, serializedContext, UPDATE_STEP_EXECUTION_CONTEXT);
+			persistSerializedContext(executionId, serializedContext, UPDATE_STEP_EXECUTION_CONTEXT);
+		}
 	}
 
 	@Override
-	public void saveJobExecutionContext(final JobExecution jobExecution) {
+	public void saveExecutionContext(JobExecution jobExecution) {
 
-		final Long executionId = jobExecution.getId();
-		final ExecutionContext executionContext = jobExecution.getExecutionContext();
+		Long executionId = jobExecution.getId();
+		ExecutionContext executionContext = jobExecution.getExecutionContext();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
 		Assert.notNull(executionContext, "The ExecutionContext must not be null.");
 
-		final String serializedContext = serializeContext(executionContext);
+		String serializedContext = serializeContext(executionContext);
 
 		persistSerializedContext(executionId, serializedContext, INSERT_JOB_EXECUTION_CONTEXT);
 	}
 
 	@Override
-	public void saveStepExecutionContext(final StepExecution stepExecution) {
-		final Long executionId = stepExecution.getId();
-		final ExecutionContext executionContext = stepExecution.getExecutionContext();
+	public void saveExecutionContext(StepExecution stepExecution) {
+		Long executionId = stepExecution.getId();
+		ExecutionContext executionContext = stepExecution.getExecutionContext();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
 		Assert.notNull(executionContext, "The ExecutionContext must not be null.");
 
-		final String serializedContext = serializeContext(executionContext);
+		String serializedContext = serializeContext(executionContext);
 
 		persistSerializedContext(executionId, serializedContext, INSERT_STEP_EXECUTION_CONTEXT);
 	}
 
 	@Override
-	public void saveStepExecutionContexts(final Collection<StepExecution> stepExecutions) {
+	public void saveExecutionContexts(Collection<StepExecution> stepExecutions) {
 		Assert.notNull(stepExecutions, "Attempt to save an null collection of step executions");
-		final Map<Long, String> serializedContexts = new HashMap<Long, String>(stepExecutions.size());
-		for (final StepExecution stepExecution : stepExecutions) {
-			final Long executionId = stepExecution.getId();
-			final ExecutionContext executionContext = stepExecution.getExecutionContext();
+		Map<Long, String> serializedContexts = new HashMap<Long, String>(stepExecutions.size());
+		for (StepExecution stepExecution : stepExecutions) {
+			Long executionId = stepExecution.getId();
+			ExecutionContext executionContext = stepExecution.getExecutionContext();
 			Assert.notNull(executionId, "ExecutionId must not be null.");
 			Assert.notNull(executionContext, "The ExecutionContext must not be null.");
 			serializedContexts.put(executionId, serializeContext(executionContext));
@@ -198,7 +201,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 		persistSerializedContexts(serializedContexts, INSERT_STEP_EXECUTION_CONTEXT);
 	}
 
-	public void setLobHandler(final LobHandler lobHandler) {
+	public void setLobHandler(LobHandler lobHandler) {
 		this.lobHandler = lobHandler;
 	}
 
@@ -212,7 +215,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	 * @param serializedContext
 	 * @param sql with parameters (shortContext, longContext, executionId)
 	 */
-	private void persistSerializedContext(final Long executionId, final String serializedContext, final String sql) {
+	private void persistSerializedContext(final Long executionId, String serializedContext, String sql) {
 
 		final String shortContext;
 		final String longContext;
@@ -229,7 +232,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 
 		getJdbcTemplate().update(getQuery(sql), new PreparedStatementSetter() {
 			@Override
-			public void setValues(final PreparedStatement ps) throws SQLException {
+			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setString(1, shortContext);
 				if (longContext != null) {
 					lobHandler.getLobCreator().setClobAsString(ps, 2, longContext);
@@ -243,19 +246,18 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	/**
-	 * @param executionId
-	 * @param serializedContext
+	 * @param serializedContexts
 	 * @param sql with parameters (shortContext, longContext, executionId)
 	 */
-	private void persistSerializedContexts(final Map<Long, String> serializedContexts, final String sql) {
+	private void persistSerializedContexts(final Map<Long, String> serializedContexts, String sql) {
         if (!serializedContexts.isEmpty()) {
             final Iterator<Long> executionIdIterator = serializedContexts.keySet().iterator();
 
             getJdbcTemplate().batchUpdate(getQuery(sql), new BatchPreparedStatementSetter() {
                 @Override
-                public void setValues(final PreparedStatement ps, final int i) throws SQLException {
-                    final Long executionId = executionIdIterator.next();
-                    final String serializedContext = serializedContexts.get(executionId);
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    Long executionId = executionIdIterator.next();
+                    String serializedContext = serializedContexts.get(executionId);
                     String shortContext;
                     String longContext;
                     if (serializedContext.length() > shortContextLength) {
@@ -284,33 +286,31 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
         }
     }
 
-	@SuppressWarnings("unchecked")
-	private String serializeContext(final ExecutionContext ctx) {
-		final Map<String, Object> m = new HashMap<String, Object>();
-		for (final Entry<String, Object> me : ctx.entrySet()) {
+	private String serializeContext(ExecutionContext ctx) {
+		Map<String, Object> m = new HashMap<String, Object>();
+		for (Entry<String, Object> me : ctx.entrySet()) {
 			m.put(me.getKey(), me.getValue());
 		}
 
-		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		String results = "";
 
 		try {
 			serializer.serialize(m, out);
 			results = new String(out.toByteArray(), "ISO-8859-1");
 		}
-		catch (final IOException ioe) {
+		catch (IOException ioe) {
 			throw new IllegalArgumentException("Could not serialize the execution context", ioe);
 		}
 
 		return results;
 	}
 
-	@SuppressWarnings("unchecked")
 	private class ExecutionContextRowMapper implements ParameterizedRowMapper<ExecutionContext> {
 
 		@Override
-		public ExecutionContext mapRow(final ResultSet rs, final int i) throws SQLException {
-			final ExecutionContext executionContext = new ExecutionContext();
+		public ExecutionContext mapRow(ResultSet rs, int i) throws SQLException {
+			ExecutionContext executionContext = new ExecutionContext();
 			String serializedContext = rs.getString("SERIALIZED_CONTEXT");
 			if (serializedContext == null) {
 				serializedContext = rs.getString("SHORT_CONTEXT");
@@ -318,13 +318,13 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 
 			Map<String, Object> map;
 			try {
-				final ByteArrayInputStream in = new ByteArrayInputStream(serializedContext.getBytes("ISO-8859-1"));
-				map = (Map<String, Object>) serializer.deserialize(in);
+				ByteArrayInputStream in = new ByteArrayInputStream(serializedContext.getBytes("ISO-8859-1"));
+				map = serializer.deserialize(in);
 			}
-			catch (final IOException ioe) {
+			catch (IOException ioe) {
 				throw new IllegalArgumentException("Unable to deserialize the execution context", ioe);
 			}
-			for (final Map.Entry<String, Object> entry : map.entrySet()) {
+			for (Map.Entry<String, Object> entry : map.entrySet()) {
 				executionContext.put(entry.getKey(), entry.getValue());
 			}
 			return executionContext;

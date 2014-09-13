@@ -1,9 +1,26 @@
+/*
+ * Copyright 2008-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.core.repository.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -71,4 +88,20 @@ public class JdbcJobInstanceDaoTests extends AbstractJobInstanceDaoTests {
 		assertEquals("Wrong hash: " + value, 32, value.length());
 		assertEquals(value, output.toString());
 	}
+	
+	@Test
+	public void testJobInstanceWildcard() {
+		dao.createJobInstance("anotherJob", new JobParameters());
+		dao.createJobInstance("someJob", new JobParameters());
+
+		List<JobInstance> jobInstances = dao.findJobInstancesByName("*Job", 0, 2);
+		assertEquals(2, jobInstances.size());
+
+		for (JobInstance instance : jobInstances) {
+			assertTrue(instance.getJobName().contains("Job"));
+		}
+
+		jobInstances = dao.getJobInstances("Job*", 0, 2);
+		assertTrue(jobInstances.isEmpty());
+	}	
 }

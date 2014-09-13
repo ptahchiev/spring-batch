@@ -15,14 +15,6 @@
  */
 package org.springframework.batch.item.database;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.item.ItemWriter;
@@ -36,6 +28,13 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.util.Assert;
 
+import javax.sql.DataSource;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * <p>{@link ItemWriter} that uses the batching features from
  * {@link NamedParameterJdbcTemplate} to execute a batch of statements for all items
@@ -47,11 +46,11 @@ import org.springframework.util.Assert;
  * named parameter support then you should provide a {@link ItemSqlParameterSourceProvider},
  * otherwise you should provide a  {@link ItemPreparedStatementSetter}.
  * This callback would be responsible for mapping the item to the parameters needed to
- * execute the SQL statement.<br/>
+ * execute the SQL statement.<br>
  *
- * It is expected that {@link #write(List)} is called inside a transaction.<br/>
+ * It is expected that {@link #write(List)} is called inside a transaction.<br>
  *
- * The writer is thread safe after its properties are set (normal singleton
+ * The writer is thread-safe after its properties are set (normal singleton
  * behavior), so it can be used to write in multiple concurrent transactions.
  *
  * @author Dave Syer
@@ -158,8 +157,8 @@ public class JdbcBatchItemWriter<T> implements ItemWriter<T>, InitializingBean {
 	/* (non-Javadoc)
 	 * @see org.springframework.batch.item.ItemWriter#write(java.util.List)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public void write(final List<? extends T> items) throws Exception {
 
 		if (!items.isEmpty()) {
@@ -183,9 +182,9 @@ public class JdbcBatchItemWriter<T> implements ItemWriter<T>, InitializingBean {
 				}
 			}
 			else {
-				updateCounts = (int[]) namedParameterJdbcTemplate.getJdbcOperations().execute(sql, new PreparedStatementCallback() {
+				updateCounts = namedParameterJdbcTemplate.getJdbcOperations().execute(sql, new PreparedStatementCallback<int[]>() {
 					@Override
-					public Object doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+					public int[] doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
 						for (T item : items) {
 							itemPreparedStatementSetter.setValues(item, ps);
 							ps.addBatch();

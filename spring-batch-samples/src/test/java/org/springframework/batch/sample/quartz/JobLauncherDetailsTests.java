@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,9 @@ import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
-import org.quartz.SimpleTrigger;
+import org.quartz.impl.JobDetailImpl;
+import org.quartz.impl.JobExecutionContextImpl;
+import org.quartz.impl.triggers.SimpleTriggerImpl;
 import org.quartz.spi.TriggerFiredBundle;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
@@ -46,23 +48,23 @@ import org.springframework.batch.core.repository.JobRestartException;
  * 
  */
 public class JobLauncherDetailsTests {
-
 	private JobLauncherDetails details = new JobLauncherDetails();
-	
 	private TriggerFiredBundle firedBundle;
-	
 	private List<Serializable> list = new ArrayList<Serializable>();
 	
 	@Before
 	public void setUp() throws Exception {
 		details.setJobLauncher(new JobLauncher() {
+			@Override
 			public JobExecution run(org.springframework.batch.core.Job job, JobParameters jobParameters)
 					throws JobExecutionAlreadyRunningException, JobRestartException {
 				list.add(jobParameters);
 				return null;
 			}
 		});
+
 		details.setJobLocator(new JobLocator() {
+			@Override
 			public org.springframework.batch.core.Job getJob(String name) throws NoSuchJobException {
 				list.add(name);
 				return new StubJob("foo");
@@ -71,7 +73,7 @@ public class JobLauncherDetailsTests {
 	}
 
 	private JobExecutionContext createContext(JobDetail jobDetail) {
-		firedBundle = new TriggerFiredBundle(jobDetail, new SimpleTrigger(), null, false, new Date(), new Date(), new Date(), new Date());
+		firedBundle = new TriggerFiredBundle(jobDetail, new SimpleTriggerImpl(), null, false, new Date(), new Date(), new Date(), new Date());
 		return new StubJobExecutionContext();
 	}
 
@@ -81,7 +83,7 @@ public class JobLauncherDetailsTests {
 	 */
 	@Test
 	public void testExecuteWithNoJobParameters() {
-		JobDetail jobDetail = new JobDetail();
+		JobDetail jobDetail = new JobDetailImpl();
 		JobExecutionContext context = createContext(jobDetail);
 		details.executeInternal(context);
 		assertEquals(2, list.size());
@@ -95,7 +97,7 @@ public class JobLauncherDetailsTests {
 	 */
 	@Test
 	public void testExecuteWithJobName() {
-		JobDetail jobDetail = new JobDetail();
+		JobDetail jobDetail = new JobDetailImpl();
 		jobDetail.getJobDataMap().put(JobLauncherDetails.JOB_NAME, "FOO");
 		JobExecutionContext context = createContext(jobDetail);
 		details.executeInternal(context);
@@ -109,7 +111,7 @@ public class JobLauncherDetailsTests {
 	 */
 	@Test
 	public void testExecuteWithSomeJobParameters() {
-		JobDetail jobDetail = new JobDetail();
+		JobDetail jobDetail = new JobDetailImpl();
 		jobDetail.getJobDataMap().put("foo", "bar");
 		JobExecutionContext context = createContext(jobDetail);
 		details.executeInternal(context);
@@ -124,7 +126,7 @@ public class JobLauncherDetailsTests {
 	 */
 	@Test
 	public void testExecuteWithJobNameAndParameters() {
-		JobDetail jobDetail = new JobDetail();
+		JobDetail jobDetail = new JobDetailImpl();
 		jobDetail.getJobDataMap().put(JobLauncherDetails.JOB_NAME, "FOO");
 		jobDetail.getJobDataMap().put("foo", "bar");
 		JobExecutionContext context = createContext(jobDetail);
@@ -141,7 +143,7 @@ public class JobLauncherDetailsTests {
 	 */
 	@Test
 	public void testExecuteWithJobNameAndComplexParameters() {
-		JobDetail jobDetail = new JobDetail();
+		JobDetail jobDetail = new JobDetailImpl();
 		jobDetail.getJobDataMap().put(JobLauncherDetails.JOB_NAME, "FOO");
 		jobDetail.getJobDataMap().put("foo", this);
 		JobExecutionContext context = createContext(jobDetail);
@@ -153,40 +155,42 @@ public class JobLauncherDetailsTests {
 		assertEquals(0, parameters.getParameters().size());
 	}
 
-	private final class StubJobExecutionContext extends JobExecutionContext {
-
+	@SuppressWarnings("serial")
+	private final class StubJobExecutionContext extends JobExecutionContextImpl {
 		private StubJobExecutionContext() {
 			super(mock(Scheduler.class), firedBundle, mock(Job.class));
 		}
-
 	}
 	
 	private static class StubJob implements org.springframework.batch.core.Job {
-
 		private final String name;
 
 		public StubJob(String name) {
 			this.name = name;
 		}
 
+		@Override
 		public void execute(JobExecution execution) {
 		}
 
+		@Override
 		public JobParametersIncrementer getJobParametersIncrementer() {
 			return null;
 		}
+
+		@Override
 		public JobParametersValidator getJobParametersValidator() {
 			return null;
 		}
 
+		@Override
 		public String getName() {
 			return name;
 		}
 
+		@Override
 		public boolean isRestartable() {
 			return false;
 		}
-
 	}
-
 }

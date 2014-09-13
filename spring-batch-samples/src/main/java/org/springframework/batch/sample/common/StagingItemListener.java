@@ -38,6 +38,7 @@ public class StagingItemListener extends StepListenerSupport<Long, Long> impleme
 		jdbcTemplate = new JdbcTemplate(dataSource);
 	}
 
+	@Override
 	public final void afterPropertiesSet() throws Exception {
 		Assert.notNull(jdbcTemplate, "You must provide a DataSource.");
 	}

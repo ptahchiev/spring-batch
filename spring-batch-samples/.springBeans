@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beansProjectDescription>
 	<version>1</version>
-	<pluginVersion><![CDATA[2.3.1.201002090815-CI-R3692-B638]]></pluginVersion>
+	<pluginVersion><![CDATA[3.3.0.201307091516-RELEASE]]></pluginVersion>
 	<configSuffixes>
 		<configSuffix><![CDATA[xml]]></configSuffix>
 	</configSuffixes>
@@ -61,6 +61,15 @@
 		<config>src/test/resources/job-runner-context.xml</config>
 		<config>src/test/resources/org/springframework/batch/sample/JobStepFunctionalTests-context.xml</config>
 		<config>src/main/resources/jobs/mailJob.xml</config>
+		<config>src/main/resources/META-INF/spring/jobs/amqp/amqp-example-job-beans.xml</config>
+		<config>src/main/resources/jobs/amqp-example-job.xml</config>
+		<config>src/main/resources/META-INF/spring/jobs/amqp/amqp-example-job.xml</config>
+		<config>src/main/resources/META-INF/spring/config-beans.xml</config>
+		<config>src/main/resources/META-INF/spring/jobs/messaging/rabbitmq-beans.xml</config>
+		<config>src/main/resources/jobs/iosample/repository.xml</config>
+		<config>java:org.springframework.batch.sample.config.DataSourceConfiguration</config>
+		<config>java:org.springframework.batch.sample.config.JobRunnerConfiguration</config>
+		<config>java:org.springframework.batch.sample.config.RetrySampleConfiguration</config>
 	</configs>
 	<configSets>
 		<configSet>
@@ -70,6 +79,8 @@
 			<configs>
 				<config>src/main/resources/data-source-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[beanWrapper]]></name>
@@ -81,6 +92,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[delegating]]></name>
@@ -92,6 +105,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[football]]></name>
@@ -103,6 +118,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[infiniteLoop]]></name>
@@ -114,6 +131,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[multiline]]></name>
@@ -125,6 +144,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[parallel]]></name>
@@ -136,6 +157,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[restart]]></name>
@@ -147,6 +170,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[retry]]></name>
@@ -158,6 +183,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[trade]]></name>
@@ -169,6 +196,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[batchUpdate]]></name>
@@ -179,6 +208,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[quartzLauncher]]></name>
@@ -190,6 +221,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[compositeItemWriter]]></name>
@@ -201,6 +234,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/jobs/compositeItemWriterSampleJob.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[adhocLoop]]></name>
@@ -212,6 +247,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[staging]]></name>
@@ -221,6 +258,8 @@
 				<config>src/main/resources/data-source-context.xml</config>
 				<config>src/main/resources/staging-test-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[common]]></name>
@@ -231,6 +270,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[jmxLauncher]]></name>
@@ -242,6 +283,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[headerFooter]]></name>
@@ -253,6 +296,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[customerFilterJob]]></name>
@@ -264,6 +309,8 @@
 				<config>src/main/resources/data-source-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[hibernate]]></name>
@@ -276,6 +323,8 @@
 				<config>src/main/resources/hibernate-context.xml</config>
 				<config>src/main/resources/jobs/hibernateJob.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[multiResourceJob]]></name>
@@ -286,6 +335,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[skipSample]]></name>
@@ -297,6 +348,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/skipSample-job-launcher-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[iosample-hibernate]]></name>
@@ -310,6 +363,8 @@
 				<config>src/main/resources/hibernate-context.xml</config>
 				<config>src/main/resources/jobs/iosample/hibernate.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[iosample-jdbc]]></name>
@@ -322,6 +377,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[iosample-multiline]]></name>
@@ -333,6 +390,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[iosample-multiRecordType]]></name>
@@ -344,6 +403,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[iosample-jpa]]></name>
@@ -356,6 +417,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[data-source-contex]]></name>
@@ -363,6 +426,8 @@
 			<incomplete>false</incomplete>
 			<configs>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[ibatis]]></name>
@@ -374,6 +439,8 @@
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 				<config>src/main/resources/jobs/iosample/ibatis.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[partition]]></name>
@@ -383,6 +450,8 @@
 				<config>src/main/resources/data-source-context.xml</config>
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[multilineOrder]]></name>
@@ -397,6 +466,8 @@
 				<config>src/main/resources/jobs/multilineOrderOutputAggregators.xml</config>
 				<config>src/main/resources/jobs/multilineOrderValidator.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 		<configSet>
 			<name><![CDATA[restartFile]]></name>
@@ -408,6 +479,8 @@
 				<config>src/main/resources/simple-job-launcher-context.xml</config>
 				<config>src/main/resources/org/springframework/batch/sample/config/common-context.xml</config>
 			</configs>
+			<profiles>
+			</profiles>
 		</configSet>
 	</configSets>
 </beansProjectDescription>

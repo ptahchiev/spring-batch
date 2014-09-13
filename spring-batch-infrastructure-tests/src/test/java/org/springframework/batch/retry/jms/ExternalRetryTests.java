@@ -16,15 +16,6 @@
 
 package org.springframework.batch.retry.jms;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +35,14 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "/org/springframework/batch/jms/jms-context.xml")
@@ -72,6 +71,7 @@ public class ExternalRetryTests {
 		jdbcTemplate.execute("delete from T_BARS");
 		jmsTemplate.convertAndSend("queue", "foo");
 		provider = new ItemReader<String>() {
+			@Override
 			public String read() {
 				String text = (String) jmsTemplate.receiveAndConvert("queue");
 				list.add(text);
@@ -82,7 +82,7 @@ public class ExternalRetryTests {
 	}
 
 	private void assertInitialState() {
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(0, count);
 	}
 
@@ -100,7 +100,8 @@ public class ExternalRetryTests {
 		assertInitialState();
 
 		final ItemWriter<Object> writer = new ItemWriter<Object>() {
-			public void write(final List<? extends Object> texts) {
+			@Override
+			public void write(final List<?> texts) {
 
 				for (Object text : texts) {
 
@@ -116,11 +117,13 @@ public class ExternalRetryTests {
 		};
 
 		try {
-			new TransactionTemplate(transactionManager).execute(new TransactionCallback() {
+			new TransactionTemplate(transactionManager).execute(new TransactionCallback<Object>() {
+				@Override
 				public Object doInTransaction(TransactionStatus status) {
 					try {
 						final Object item = provider.read();
-						RetryCallback<Object> callback = new RetryCallback<Object>() {
+						RetryCallback<Object, Exception> callback = new RetryCallback<Object, Exception>() {
+							@Override
 							public Object doWithRetry(RetryContext context) throws Exception {
 								writer.write(Collections.singletonList(item));
 								return null;
@@ -144,11 +147,13 @@ public class ExternalRetryTests {
 
 		}
 
-		new TransactionTemplate(transactionManager).execute(new TransactionCallback() {
+		new TransactionTemplate(transactionManager).execute(new TransactionCallback<Object>() {
+			@Override
 			public Object doInTransaction(TransactionStatus status) {
 				try {
 					final String item = provider.read();
-					RetryCallback<Object> callback = new RetryCallback<Object>() {
+					RetryCallback<Object, Exception> callback = new RetryCallback<Object, Exception>() {
+						@Override
 						public Object doWithRetry(RetryContext context) throws Exception {
 							writer.write(Collections.singletonList(item));
 							return null;
@@ -165,7 +170,7 @@ public class ExternalRetryTests {
 		List<String> msgs = getMessages();
 
 		// The database portion committed once...
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(1, count);
 
 		// ... and so did the message session.
@@ -181,7 +186,8 @@ public class ExternalRetryTests {
 		assertInitialState();
 
 		final String item = provider.read();
-		final RetryCallback<String> callback = new RetryCallback<String>() {
+		final RetryCallback<String, Exception> callback = new RetryCallback<String, Exception>() {
+			@Override
 			public String doWithRetry(RetryContext context) throws Exception {
 				jdbcTemplate.update("INSERT into T_BARS (id,name,foo_date) values (?,?,null)", list.size(), item);
 				throw new RuntimeException("Rollback!");
@@ -189,6 +195,7 @@ public class ExternalRetryTests {
 		};
 
 		final RecoveryCallback<String> recoveryCallback = new RecoveryCallback<String>() {
+			@Override
 			public String recover(RetryContext context) {
 				recovered.add(item);
 				return item;
@@ -199,8 +206,9 @@ public class ExternalRetryTests {
 
 		for (int i = 0; i < 4; i++) {
 			try {
-				result = (String) new TransactionTemplate(transactionManager).execute(new TransactionCallback() {
-					public Object doInTransaction(TransactionStatus status) {
+				result = new TransactionTemplate(transactionManager).execute(new TransactionCallback<String>() {
+					@Override
+					public String doInTransaction(TransactionStatus status) {
 						try {
 							return retryTemplate.execute(callback, recoveryCallback, new DefaultRetryState(item));
 						}
@@ -230,7 +238,7 @@ public class ExternalRetryTests {
 		assertEquals(1, recovered.size());
 
 		// The database portion committed once...
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(0, count);
 
 		// ... and so did the message session.

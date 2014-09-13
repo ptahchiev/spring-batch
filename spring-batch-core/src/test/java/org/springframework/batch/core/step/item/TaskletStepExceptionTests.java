@@ -1,14 +1,19 @@
+/*
+ * Copyright 2008-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.core.step.item;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.springframework.batch.core.BatchStatus.COMPLETED;
-import static org.springframework.batch.core.BatchStatus.FAILED;
-import static org.springframework.batch.core.BatchStatus.STOPPED;
-import static org.springframework.batch.core.BatchStatus.UNKNOWN;
-
-import java.util.Collection;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +22,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobInterruptedException;
 import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
@@ -38,6 +44,16 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.UnexpectedRollbackException;
 import org.springframework.transaction.support.DefaultTransactionStatus;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.springframework.batch.core.BatchStatus.COMPLETED;
+import static org.springframework.batch.core.BatchStatus.FAILED;
+import static org.springframework.batch.core.BatchStatus.STOPPED;
+import static org.springframework.batch.core.BatchStatus.UNKNOWN;
 
 /**
  * Tests for the behavior of TaskletStep in a failure scenario.
@@ -230,7 +246,9 @@ public class TaskletStepExceptionTests {
 		assertEquals(1, stepExecution.getRollbackCount()); // Failed transaction
 		// counts as
 		// rollback
-		assertEquals(0, stepExecution.getExecutionContext().size());
+		assertEquals(2, stepExecution.getExecutionContext().size());
+		assertTrue(stepExecution.getExecutionContext().containsKey(Step.STEP_TYPE_KEY));
+		assertTrue(stepExecution.getExecutionContext().containsKey(TaskletStep.TASKLET_TYPE_KEY));
 	}
 
 	@SuppressWarnings("serial")
@@ -263,7 +281,9 @@ public class TaskletStepExceptionTests {
 		assertEquals(1, stepExecution.getRollbackCount()); // Failed transaction
 		// counts as
 		// rollback
-		assertEquals(0, stepExecution.getExecutionContext().size());
+		assertEquals(2, stepExecution.getExecutionContext().size());
+		assertTrue(stepExecution.getExecutionContext().containsKey(Step.STEP_TYPE_KEY));
+		assertTrue(stepExecution.getExecutionContext().containsKey(TaskletStep.TASKLET_TYPE_KEY));
 	}
 
 	@Test
@@ -301,9 +321,32 @@ public class TaskletStepExceptionTests {
 		jobRepository.setFailOnUpdateExecutionContext(true);
 		jobRepository.setFailInTransaction(true);
 		taskletStep.execute(stepExecution);
+		assertEquals(FAILED, stepExecution.getStatus());
+		Throwable e = stepExecution.getFailureExceptions().get(0);
+		assertEquals("JobRepository failure forcing rollback", e.getMessage());
+
+	}
+
+	@Test
+	public void testRepositoryErrorOnExecutionContextInTransactionRollbackFailed() throws Exception {
+
+		taskletStep.setTasklet(new Tasklet() {
+
+			@Override
+			public RepeatStatus execute(StepContribution contribution, ChunkContext attributes) throws Exception {
+				return RepeatStatus.FINISHED;
+			}
+
+		});
+		
+		taskletStep.setTransactionManager(new FailingRollbackTransactionManager());
+
+		jobRepository.setFailOnUpdateExecutionContext(true);
+		jobRepository.setFailInTransaction(true);
+		taskletStep.execute(stepExecution);
 		assertEquals(UNKNOWN, stepExecution.getStatus());
 		Throwable e = stepExecution.getFailureExceptions().get(0);
-		assertEquals("JobRepository failure forcing exit with unknown status", e.getMessage());
+		assertEquals("Expected exception in rollback", e.getMessage());
 
 	}
 
@@ -319,11 +362,55 @@ public class TaskletStepExceptionTests {
 
 		});
 
-		jobRepository.setFailOnUpdateStepExecution(1);
+		jobRepository.setFailOnUpdateStepExecution(2);
 		taskletStep.execute(stepExecution);
 		assertEquals(UNKNOWN, stepExecution.getStatus());
 		Throwable e = stepExecution.getFailureExceptions().get(0);
-		assertEquals("JobRepository failure forcing exit with unknown status", e.getMessage());
+		assertEquals("Expected exception in step execution persistence", e.getMessage());
+
+	}
+
+	@Test
+	public void testRepositoryErrorOnUpdateStepExecutionInTransaction() throws Exception {
+
+		taskletStep.setTasklet(new Tasklet() {
+
+			@Override
+			public RepeatStatus execute(StepContribution contribution, ChunkContext attributes) throws Exception {
+				return RepeatStatus.FINISHED;
+			}
+
+		});
+
+		jobRepository.setFailOnUpdateStepExecution(1);
+		jobRepository.setFailInTransaction(true);
+		taskletStep.execute(stepExecution);
+		assertEquals(FAILED, stepExecution.getStatus());
+		Throwable e = stepExecution.getFailureExceptions().get(0);
+		assertEquals("JobRepository failure forcing rollback", e.getMessage());
+
+	}
+
+	@Test
+	public void testRepositoryErrorOnUpdateStepExecutionInTransactionRollbackFailed() throws Exception {
+
+		taskletStep.setTasklet(new Tasklet() {
+
+			@Override
+			public RepeatStatus execute(StepContribution contribution, ChunkContext attributes) throws Exception {
+				return RepeatStatus.FINISHED;
+			}
+
+		});
+		
+		taskletStep.setTransactionManager(new FailingRollbackTransactionManager());
+
+		jobRepository.setFailOnUpdateStepExecution(1);
+		jobRepository.setFailInTransaction(true);
+		taskletStep.execute(stepExecution);
+		assertEquals(UNKNOWN, stepExecution.getStatus());
+		Throwable e = stepExecution.getFailureExceptions().get(0);
+		assertEquals("Expected exception in rollback", e.getMessage());
 
 	}
 
@@ -439,10 +526,12 @@ public class TaskletStepExceptionTests {
 
 		@Override
 		public void update(StepExecution stepExecution) {
-			if (updateCount == failOnUpdateExecution) {
-				throw new RuntimeException("Expected exception in step execution persistence");
+			if (updateCount++ == failOnUpdateExecution) {
+				if (!failInTransaction
+						|| (failInTransaction && TransactionSynchronizationManager.isActualTransactionActive())) {
+					throw new RuntimeException("Expected exception in step execution persistence");
+				}
 			}
-			updateCount++;
 		}
 
 		@Override
@@ -483,6 +572,16 @@ public class TaskletStepExceptionTests {
 				JobParameters jobParameters, String jobConfigurationLocation) {
 			return null;
 		}
+	}
+	
+	@SuppressWarnings("serial")
+	private static class FailingRollbackTransactionManager extends ResourcelessTransactionManager {
+		
+		@Override
+		protected void doRollback(DefaultTransactionStatus status) throws TransactionException {
+			super.doRollback(status);
+			throw new RuntimeException("Expected exception in rollback");
+		}		
 	}
 
 }

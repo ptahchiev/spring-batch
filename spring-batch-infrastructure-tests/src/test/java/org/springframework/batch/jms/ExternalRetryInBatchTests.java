@@ -16,14 +16,6 @@
 
 package org.springframework.batch.jms;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +42,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "/org/springframework/batch/jms/jms-context.xml")
@@ -82,6 +81,7 @@ public class ExternalRetryInBatchTests {
 		jmsTemplate.convertAndSend("queue", "foo");
 		jmsTemplate.convertAndSend("queue", "bar");
 		provider = new ItemReader<String>() {
+			@Override
 			public String read() {
 				String text = (String) jmsTemplate.receiveAndConvert("queue");
 				list.add(text);
@@ -98,7 +98,7 @@ public class ExternalRetryInBatchTests {
 	}
 
 	private void assertInitialState() {
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(0, count);
 	}
 
@@ -119,12 +119,14 @@ public class ExternalRetryInBatchTests {
 		// *internal* retry policy.
 		for (int i = 0; i < 4; i++) {
 			try {
-				new TransactionTemplate(transactionManager).execute(new TransactionCallback() {
-					public Object doInTransaction(TransactionStatus status) {
+				new TransactionTemplate(transactionManager).execute(new TransactionCallback<Void>() {
+					@Override
+					public Void doInTransaction(TransactionStatus status) {
 						try {
 
 							repeatTemplate.iterate(new RepeatCallback() {
 
+								@Override
 								public RepeatStatus doInIteration(RepeatContext context) throws Exception {
 
 									final String item = provider.read();
@@ -133,7 +135,8 @@ public class ExternalRetryInBatchTests {
 										return RepeatStatus.FINISHED;
 									}
 									
-									RetryCallback<String> callback = new RetryCallback<String>() {
+									RetryCallback<String, Exception> callback = new RetryCallback<String, Exception>() {
+										@Override
 										public String doWithRetry(RetryContext context) throws Exception {
 											// No need for transaction here: the whole batch will roll
 											// back. When it comes back for recovery this code is not
@@ -146,6 +149,7 @@ public class ExternalRetryInBatchTests {
 									};
 									
 									RecoveryCallback<String> recoveryCallback = new RecoveryCallback<String>() {
+										@Override
 										public String recover(RetryContext context) {
 											// aggressive commit on a recovery
 											RepeatSynchronizationManager.setCompleteOnly();
@@ -188,7 +192,7 @@ public class ExternalRetryInBatchTests {
 		assertEquals(2, recovered.size());
 
 		// The database portion committed once...
-		int count = jdbcTemplate.queryForInt("select count(*) from T_BARS");
+		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(0, count);
 
 		// ... and so did the message session.

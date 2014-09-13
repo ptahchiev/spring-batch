@@ -32,10 +32,10 @@ import org.springframework.util.Assert;
  * that are not part of the current Hibernate session. It will also flush the
  * session after writing (i.e. at chunk boundaries if used in a Spring Batch
  * TaskletStep). It will also clear the session on write
- * default (see {@link #setClearSession(boolean) clearSession} property).<br/>
- * <br/>
+ * default (see {@link #setClearSession(boolean) clearSession} property).<br>
+ * <br>
  *
- * The writer is thread safe once properties are set (normal singleton behavior)
+ * The writer is thread-safe once properties are set (normal singleton behavior)
  * if a {@link CurrentSessionContext} that uses only one session per thread is
  * used.
  *
@@ -124,7 +124,6 @@ public class HibernateItemWriter<T> implements ItemWriter<T>, InitializingBean {
 	 *
 	 * @param items
 	 *            the list of items to use for the write
-	 * @deprecated As of 2.2 in favor of using Hibernate's session management APIs directly
 	 */
 	protected void doWrite(SessionFactory sessionFactory, List<? extends T> items) {
 		if (logger.isDebugEnabled()) {

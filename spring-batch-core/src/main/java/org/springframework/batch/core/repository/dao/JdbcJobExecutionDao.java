@@ -38,6 +38,7 @@ import org.springframework.batch.core.JobParameter.ParameterType;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
@@ -57,7 +58,7 @@ import org.springframework.util.Assert;
  * @author Robert Kasanicky
  * @author Michael Minella
  */
-public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements JobExecutionDao<JobExecution, JobInstance>, InitializingBean {
+public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements JobExecutionDao, InitializingBean {
 
 	private static final Log logger = LogFactory.getLog(JdbcJobExecutionDao.class);
 
@@ -100,7 +101,7 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * you haven't modified the schema.
 	 * @param exitMessageLength the exitMessageLength to set
 	 */
-	public void setExitMessageLength(final int exitMessageLength) {
+	public void setExitMessageLength(int exitMessageLength) {
 		this.exitMessageLength = exitMessageLength;
 	}
 
@@ -110,7 +111,7 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 *
 	 * @param jobExecutionIncrementer the {@link DataFieldMaxValueIncrementer}
 	 */
-	public void setJobExecutionIncrementer(final DataFieldMaxValueIncrementer jobExecutionIncrementer) {
+	public void setJobExecutionIncrementer(DataFieldMaxValueIncrementer jobExecutionIncrementer) {
 		this.jobExecutionIncrementer = jobExecutionIncrementer;
 	}
 
@@ -121,7 +122,7 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	}
 
 	@Override
-	public List<JobExecution> findAllByJobInstance(final JobInstance job) {
+	public List<JobExecution> findJobExecutions(final JobInstance job) {
 
 		Assert.notNull(job, "Job cannot be null.");
 		Assert.notNull(job.getId(), "Job Id cannot be null.");
@@ -140,14 +141,14 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * of it's fields to be persisted.
 	 */
 	@Override
-	public void save(final JobExecution jobExecution) {
+	public void saveJobExecution(JobExecution jobExecution) {
 
 		validateJobExecution(jobExecution);
 
 		jobExecution.incrementVersion();
 
 		jobExecution.setId(jobExecutionIncrementer.nextLongValue());
-		final Object[] parameters = new Object[] { jobExecution.getId(), jobExecution.getJobId(),
+		Object[] parameters = new Object[] { jobExecution.getId(), jobExecution.getJobId(),
 				jobExecution.getStartTime(), jobExecution.getEndTime(), jobExecution.getStatus().toString(),
 				jobExecution.getExitStatus().getExitCode(), jobExecution.getExitStatus().getExitDescription(),
 				jobExecution.getVersion(), jobExecution.getCreateTime(), jobExecution.getLastUpdated(),
@@ -168,7 +169,7 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * @param jobExecution
 	 * @throws IllegalArgumentException
 	 */
-	private void validateJobExecution(final JobExecution jobExecution) {
+	private void validateJobExecution(JobExecution jobExecution) {
 
 		Assert.notNull(jobExecution);
 		Assert.notNull(jobExecution.getJobId(), "JobExecution Job-Id cannot be null.");
@@ -176,72 +177,72 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 		Assert.notNull(jobExecution.getCreateTime(), "JobExecution create time cannot be null");
 	}
 
-//	/**
-//	 * Update given JobExecution using a SQL UPDATE statement. The JobExecution
-//	 * is first checked to ensure all fields are not null, and that it has an
-//	 * ID. The database is then queried to ensure that the ID exists, which
-//	 * ensures that it is valid.
-//	 *
-//	 * @see JobExecutionDao#updateJobExecution(JobExecution)
-//	 */
-//	@Override
-//	public void updateJobExecution(JobExecution jobExecution) {
-//
-//		validateJobExecution(jobExecution);
-//
-//		Assert.notNull(jobExecution.getId(),
-//				"JobExecution ID cannot be null. JobExecution must be saved before it can be updated");
-//
-//		Assert.notNull(jobExecution.getVersion(),
-//				"JobExecution version cannot be null. JobExecution must be saved before it can be updated");
-//
-//		synchronized (jobExecution) {
-//			Integer version = jobExecution.getVersion() + 1;
-//
-//			String exitDescription = jobExecution.getExitStatus().getExitDescription();
-//			if (exitDescription != null && exitDescription.length() > exitMessageLength) {
-//				exitDescription = exitDescription.substring(0, exitMessageLength);
-//				logger.debug("Truncating long message before update of JobExecution: " + jobExecution);
-//			}
-//			Object[] parameters = new Object[] { jobExecution.getStartTime(), jobExecution.getEndTime(),
-//					jobExecution.getStatus().toString(), jobExecution.getExitStatus().getExitCode(), exitDescription,
-//					version, jobExecution.getCreateTime(), jobExecution.getLastUpdated(), jobExecution.getId(),
-//					jobExecution.getVersion() };
-//
-//			// Check if given JobExecution's Id already exists, if none is found
-//			// it
-//			// is invalid and
-//			// an exception should be thrown.
-//			if (getJdbcTemplate().queryForInt(getQuery(CHECK_JOB_EXECUTION_EXISTS),
-//					new Object[] { jobExecution.getId() }) != 1) {
-//				throw new NoSuchObjectException("Invalid JobExecution, ID " + jobExecution.getId() + " not found.");
-//			}
-//
-//			int count = getJdbcTemplate().update(
-//					getQuery(UPDATE_JOB_EXECUTION),
-//					parameters,
-//					new int[] { Types.TIMESTAMP, Types.TIMESTAMP, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR,
-//						Types.INTEGER, Types.TIMESTAMP, Types.TIMESTAMP, Types.BIGINT, Types.INTEGER });
-//
-//			// Avoid concurrent modifications...
-//			if (count == 0) {
-//				int curentVersion = getJdbcTemplate().queryForInt(getQuery(CURRENT_VERSION_JOB_EXECUTION),
-//						new Object[] { jobExecution.getId() });
-//				throw new OptimisticLockingFailureException("Attempt to update job execution id="
-//						+ jobExecution.getId() + " with wrong version (" + jobExecution.getVersion()
-//						+ "), where current version is " + curentVersion);
-//			}
-//
-//			jobExecution.incrementVersion();
-//		}
-//	}
+	/**
+	 * Update given JobExecution using a SQL UPDATE statement. The JobExecution
+	 * is first checked to ensure all fields are not null, and that it has an
+	 * ID. The database is then queried to ensure that the ID exists, which
+	 * ensures that it is valid.
+	 *
+	 * @see JobExecutionDao#updateJobExecution(JobExecution)
+	 */
+	@Override
+	public void updateJobExecution(JobExecution jobExecution) {
+
+		validateJobExecution(jobExecution);
+
+		Assert.notNull(jobExecution.getId(),
+				"JobExecution ID cannot be null. JobExecution must be saved before it can be updated");
+
+		Assert.notNull(jobExecution.getVersion(),
+				"JobExecution version cannot be null. JobExecution must be saved before it can be updated");
+
+		synchronized (jobExecution) {
+			Integer version = jobExecution.getVersion() + 1;
+
+			String exitDescription = jobExecution.getExitStatus().getExitDescription();
+			if (exitDescription != null && exitDescription.length() > exitMessageLength) {
+				exitDescription = exitDescription.substring(0, exitMessageLength);
+				logger.debug("Truncating long message before update of JobExecution: " + jobExecution);
+			}
+			Object[] parameters = new Object[] { jobExecution.getStartTime(), jobExecution.getEndTime(),
+					jobExecution.getStatus().toString(), jobExecution.getExitStatus().getExitCode(), exitDescription,
+					version, jobExecution.getCreateTime(), jobExecution.getLastUpdated(), jobExecution.getId(),
+					jobExecution.getVersion() };
+
+			// Check if given JobExecution's Id already exists, if none is found
+			// it
+			// is invalid and
+			// an exception should be thrown.
+			if (getJdbcTemplate().queryForObject(getQuery(CHECK_JOB_EXECUTION_EXISTS), Integer.class,
+					new Object[] { jobExecution.getId() }) != 1) {
+				throw new NoSuchObjectException("Invalid JobExecution, ID " + jobExecution.getId() + " not found.");
+			}
+
+			int count = getJdbcTemplate().update(
+					getQuery(UPDATE_JOB_EXECUTION),
+					parameters,
+					new int[] { Types.TIMESTAMP, Types.TIMESTAMP, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR,
+						Types.INTEGER, Types.TIMESTAMP, Types.TIMESTAMP, Types.BIGINT, Types.INTEGER });
+
+			// Avoid concurrent modifications...
+			if (count == 0) {
+				int curentVersion = getJdbcTemplate().queryForObject(getQuery(CURRENT_VERSION_JOB_EXECUTION), Integer.class,
+						new Object[] { jobExecution.getId() });
+				throw new OptimisticLockingFailureException("Attempt to update job execution id="
+						+ jobExecution.getId() + " with wrong version (" + jobExecution.getVersion()
+						+ "), where current version is " + curentVersion);
+			}
+
+			jobExecution.incrementVersion();
+		}
+	}
 
 	@Override
-	public JobExecution findByJobInstanceOrderByJobExecutionIdAsc(final JobInstance jobInstance) {
+	public JobExecution getLastJobExecution(JobInstance jobInstance) {
 
-		final Long id = jobInstance.getId();
+		Long id = jobInstance.getId();
 
-		final List<JobExecution> executions = getJdbcTemplate().query(getQuery(GET_LAST_EXECUTION),
+		List<JobExecution> executions = getJdbcTemplate().query(getQuery(GET_LAST_EXECUTION),
 				new JobExecutionRowMapper(jobInstance), id, id);
 
 		Assert.state(executions.size() <= 1, "There must be at most one latest job execution");
@@ -261,13 +262,13 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * getLastJobExecution(java.lang.String)
 	 */
 	@Override
-	public JobExecution findOne(final Long executionId) {
+	public JobExecution getJobExecution(Long executionId) {
 		try {
-			final JobExecution jobExecution = getJdbcTemplate().queryForObject(getQuery(GET_EXECUTION_BY_ID),
+			JobExecution jobExecution = getJdbcTemplate().queryForObject(getQuery(GET_EXECUTION_BY_ID),
 					new JobExecutionRowMapper(), executionId);
 			return jobExecution;
 		}
-		catch (final EmptyResultDataAccessException e) {
+		catch (EmptyResultDataAccessException e) {
 			return null;
 		}
 	}
@@ -279,13 +280,13 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * findRunningJobExecutions(java.lang.String)
 	 */
 	@Override
-	public Set<JobExecution> findByJobNameAndEndTimeIsNullOrderByJobExecutionId(final String jobName) {
+	public Set<JobExecution> findRunningJobExecutions(String jobName) {
 
 		final Set<JobExecution> result = new HashSet<JobExecution>();
-		final RowCallbackHandler handler = new RowCallbackHandler() {
+		RowCallbackHandler handler = new RowCallbackHandler() {
 			@Override
-			public void processRow(final ResultSet rs) throws SQLException {
-				final JobExecutionRowMapper mapper = new JobExecutionRowMapper();
+			public void processRow(ResultSet rs) throws SQLException {
+				JobExecutionRowMapper mapper = new JobExecutionRowMapper();
 				result.add(mapper.mapRow(rs, 0));
 			}
 		};
@@ -295,12 +296,12 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	}
 
 	@Override
-	public void synchronizeStatus(final JobExecution jobExecution) {
-		final int currentVersion = getJdbcTemplate().queryForInt(getQuery(CURRENT_VERSION_JOB_EXECUTION),
+	public void synchronizeStatus(JobExecution jobExecution) {
+		int currentVersion = getJdbcTemplate().queryForObject(getQuery(CURRENT_VERSION_JOB_EXECUTION), Integer.class,
 				jobExecution.getId());
 
 		if (currentVersion != jobExecution.getVersion().intValue()) {
-			final String status = getJdbcTemplate().queryForObject(getQuery(GET_STATUS), String.class, jobExecution.getId());
+			String status = getJdbcTemplate().queryForObject(getQuery(GET_STATUS), String.class, jobExecution.getId());
 			jobExecution.upgradeStatus(BatchStatus.valueOf(status));
 			jobExecution.setVersion(currentVersion);
 		}
@@ -311,11 +312,11 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * JobParameters.
 	 *
 	 */
-	private void insertJobParameters(final Long executionId, final JobParameters jobParameters) {
+	private void insertJobParameters(Long executionId, JobParameters jobParameters) {
 
-		for (final Entry<String, JobParameter> entry : jobParameters.getParameters()
+		for (Entry<String, JobParameter> entry : jobParameters.getParameters()
 				.entrySet()) {
-			final JobParameter jobParameter = entry.getValue();
+			JobParameter jobParameter = entry.getValue();
 			insertParameter(executionId, jobParameter.getType(), entry.getKey(),
 					jobParameter.getValue(), jobParameter.isIdentifying());
 		}
@@ -325,15 +326,15 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * Convenience method that inserts an individual records into the
 	 * JobParameters table.
 	 */
-	private void insertParameter(final Long executionId, final ParameterType type, final String key,
-			final Object value, final boolean identifying) {
+	private void insertParameter(Long executionId, ParameterType type, String key,
+			Object value, boolean identifying) {
 
 		Object[] args = new Object[0];
-		final int[] argTypes = new int[] { Types.BIGINT, Types.VARCHAR,
+		int[] argTypes = new int[] { Types.BIGINT, Types.VARCHAR,
 				Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.BIGINT,
 				Types.DOUBLE, Types.CHAR };
 
-		final String identifyingFlag = identifying? "Y":"N";
+		String identifyingFlag = identifying? "Y":"N";
 
 		if (type == ParameterType.STRING) {
 			args = new Object[] { executionId, key, type, value, new Timestamp(0L),
@@ -355,12 +356,12 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * @param executionId
 	 * @return
 	 */
-	protected JobParameters getJobParameters(final Long executionId) {
+	protected JobParameters getJobParameters(Long executionId) {
 		final Map<String, JobParameter> map = new HashMap<String, JobParameter>();
-		final RowCallbackHandler handler = new RowCallbackHandler() {
+		RowCallbackHandler handler = new RowCallbackHandler() {
 			@Override
-			public void processRow(final ResultSet rs) throws SQLException {
-				final ParameterType type = ParameterType.valueOf(rs.getString(3));
+			public void processRow(ResultSet rs) throws SQLException {
+				ParameterType type = ParameterType.valueOf(rs.getString(3));
 				JobParameter value = null;
 
 				if (type == ParameterType.STRING) {
@@ -398,14 +399,14 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 		public JobExecutionRowMapper() {
 		}
 
-		public JobExecutionRowMapper(final JobInstance jobInstance) {
+		public JobExecutionRowMapper(JobInstance jobInstance) {
 			this.jobInstance = jobInstance;
 		}
 
 		@Override
-		public JobExecution mapRow(final ResultSet rs, final int rowNum) throws SQLException {
-			final Long id = rs.getLong(1);
-			final String jobConfigurationLocation = rs.getString(10);
+		public JobExecution mapRow(ResultSet rs, int rowNum) throws SQLException {
+			Long id = rs.getLong(1);
+			String jobConfigurationLocation = rs.getString(10);
 			JobExecution jobExecution;
 			if (jobParameters == null) {
 				jobParameters = getJobParameters(id);

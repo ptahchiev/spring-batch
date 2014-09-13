@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,12 @@ package org.springframework.batch.sample.jmx;
 
 import org.aspectj.lang.JoinPoint;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 
 /**
  * Wraps calls for methods taking {@link StepExecution} as an argument and
- * publishes notifications in the form of {@link ApplicationEvent}.
+ * publishes notifications in the form of {@link org.springframework.context.ApplicationEvent}.
  * 
  * @author Dave Syer
  */
@@ -36,6 +35,7 @@ public class StepExecutionApplicationEventAdvice implements ApplicationEventPubl
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationEventPublisherAware#setApplicationEventPublisher(org.springframework.context.ApplicationEventPublisher)
 	 */
+	@Override
 	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
@@ -62,5 +62,4 @@ public class StepExecutionApplicationEventAdvice implements ApplicationEventPubl
 	private void publish(Object source, String message) {
 		applicationEventPublisher.publishEvent(new SimpleMessageApplicationEvent(source, message));
 	}
-
 }

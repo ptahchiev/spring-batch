@@ -16,6 +16,9 @@
 
 package org.springframework.batch.item.file.transform;
 
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -27,9 +30,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
-
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Default implementation of {@link FieldSet} using Java using Java primitive
@@ -108,7 +108,7 @@ public class DefaultFieldSet implements FieldSet {
 			throw new IllegalArgumentException("Field names must be same length as values: names="
 					+ Arrays.asList(names) + ", values=" + Arrays.asList(tokens));
 		}
-		this.tokens = (String[]) tokens.clone();
+		this.tokens = tokens.clone();
 		this.names = Arrays.asList(names);
 		setNumberFormat(NumberFormat.getInstance(Locale.US));
 	}
@@ -437,7 +437,7 @@ public class DefaultFieldSet implements FieldSet {
 	 */
     @Override
 	public double readDouble(int index) {
-		return (Double) parseNumber(readAndTrim(index)).doubleValue();
+		return parseNumber(readAndTrim(index)).doubleValue();
 	}
 
 	/*
@@ -541,12 +541,8 @@ public class DefaultFieldSet implements FieldSet {
 	 */
     @Override
 	public Date readDate(int index, Date defaultValue) {
-		try {
-			return readDate(index);
-		}
-		catch (IllegalArgumentException e) {
-			return defaultValue;
-		}
+		String candidate = readAndTrim(index);
+		return StringUtils.hasText(candidate) ? parseDate(candidate, dateFormat) : defaultValue;
 	}
 
 	/*
@@ -575,10 +571,10 @@ public class DefaultFieldSet implements FieldSet {
     @Override
 	public Date readDate(String name, Date defaultValue) {
 		try {
-			return readDate(name);
+			return readDate(indexOf(name), defaultValue);
 		}
 		catch (IllegalArgumentException e) {
-			return defaultValue;
+			throw new IllegalArgumentException(e.getMessage() + ", name: [" + name + "]");
 		}
 	}
 
@@ -603,12 +599,8 @@ public class DefaultFieldSet implements FieldSet {
 	 */
     @Override
 	public Date readDate(int index, String pattern, Date defaultValue) {
-		try {
-			return readDate(index, pattern);
-		}
-		catch (IllegalArgumentException e) {
-			return defaultValue;
-		}
+		String candidate = readAndTrim(index);
+		return StringUtils.hasText(candidate) ? readDate(index, pattern) : defaultValue;
 	}
 
 	/*
@@ -637,10 +629,10 @@ public class DefaultFieldSet implements FieldSet {
     @Override
 	public Date readDate(String name, String pattern, Date defaultValue) {
 		try {
-			return readDate(name, pattern);
+			return readDate(indexOf(name), pattern, defaultValue);
 		}
 		catch (IllegalArgumentException e) {
-			return defaultValue;
+			throw new IllegalArgumentException(e.getMessage() + ", name: [" + name + "]");
 		}
 	}
 
@@ -658,7 +650,7 @@ public class DefaultFieldSet implements FieldSet {
 	/**
 	 * Read and trim the {@link String} value at '<code>index</code>'.
 	 * 
-	 * @returns null if the field value is <code>null</code>.
+	 * @return null if the field value is <code>null</code>.
 	 */
 	protected String readAndTrim(int index) {
 		String value = tokens[index];
@@ -748,7 +740,7 @@ public class DefaultFieldSet implements FieldSet {
 		for (int i = 0; i < tokens.length; i++) {
 			String value = readAndTrim(i);
 			if (value != null) {
-				props.setProperty((String) names.get(i), value);
+				props.setProperty(names.get(i), value);
 			}
 		}
 		return props;

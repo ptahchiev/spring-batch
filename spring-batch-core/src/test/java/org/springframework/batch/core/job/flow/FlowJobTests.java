@@ -15,16 +15,6 @@
  */
 package org.springframework.batch.core.job.flow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.batch.core.BatchStatus;
@@ -46,11 +36,21 @@ import org.springframework.batch.core.job.flow.support.state.StepState;
 import org.springframework.batch.core.jsr.configuration.support.BatchPropertyContext;
 import org.springframework.batch.core.jsr.partition.JsrPartitionHandler;
 import org.springframework.batch.core.jsr.step.PartitionStep;
-import org.springframework.batch.core.partition.JsrStepExecutionSplitter;
+import org.springframework.batch.core.jsr.partition.JsrStepExecutionSplitter;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.dao.JobExecutionDao;
 import org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean;
 import org.springframework.batch.core.step.StepSupport;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Dave Syer
@@ -74,7 +74,7 @@ public class FlowJobTests {
 		MapJobRepositoryFactoryBean factory = new MapJobRepositoryFactoryBean();
 		factory.afterPropertiesSet();
 		jobExecutionDao = factory.getJobExecutionDao();
-		jobRepository = (JobRepository) factory.getObject();
+		jobRepository = factory.getObject();
 		job.setJobRepository(jobRepository);
 		jobExecution = jobRepository.createJobExecution("job", new JobParameters());
 	}

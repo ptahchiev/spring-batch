@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2013 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,17 @@
  */
 package org.springframework.batch.core.step.builder;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.batch.operations.BatchRuntimeException;
-
 import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.JobInterruptedException;
 import org.springframework.batch.core.SkipListener;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.StepListener;
+import org.springframework.batch.core.annotation.AfterChunk;
+import org.springframework.batch.core.annotation.AfterChunkError;
+import org.springframework.batch.core.annotation.BeforeChunk;
+import org.springframework.batch.core.annotation.OnSkipInProcess;
+import org.springframework.batch.core.annotation.OnSkipInRead;
+import org.springframework.batch.core.annotation.OnSkipInWrite;
 import org.springframework.batch.core.listener.StepListenerFactoryBean;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.FatalStepExecutionException;
@@ -59,6 +54,7 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.repeat.RepeatOperations;
 import org.springframework.batch.repeat.support.RepeatTemplate;
+import org.springframework.batch.support.ReflectionUtils;
 import org.springframework.classify.BinaryExceptionClassifier;
 import org.springframework.classify.Classifier;
 import org.springframework.classify.SubclassClassifier;
@@ -77,12 +73,24 @@ import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.util.Assert;
 
+import javax.batch.operations.BatchRuntimeException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * A step builder for fully fault tolerant chunk-oriented item processing steps. Extends {@link SimpleStepBuilder} with
  * additional properties for retry and skip of failed items.
  *
  * @author Dave Syer
  * @author Chris Schaefer
+ * @author Michael Minella
  *
  * @since 2.2
  */
@@ -179,6 +187,45 @@ public class FaultTolerantStepBuilder<I, O> extends SimpleStepBuilder<I, O> {
 		tasklet.setBuffering(!isReaderTransactionalQueue());
 		return tasklet;
 	}
+
+	/**
+	 * Registers objects using the annotation based listener configuration.
+	 *
+	 * @param listener the object that has a method configured with listener annotation
+	 * @return this for fluent chaining
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public SimpleStepBuilder listener(Object listener) {
+		super.listener(listener);
+
+		Set<Method> skipListenerMethods = new HashSet<Method>();
+		skipListenerMethods.addAll(ReflectionUtils.findMethod(listener.getClass(), OnSkipInRead.class));
+		skipListenerMethods.addAll(ReflectionUtils.findMethod(listener.getClass(), OnSkipInProcess.class));
+		skipListenerMethods.addAll(ReflectionUtils.findMethod(listener.getClass(), OnSkipInWrite.class));
+
+		Set<Method> chunkListenerMethods = new HashSet<Method>();
+		chunkListenerMethods.addAll(ReflectionUtils.findMethod(listener.getClass(), BeforeChunk.class));
+		chunkListenerMethods.addAll(ReflectionUtils.findMethod(listener.getClass(), AfterChunk.class));
+		chunkListenerMethods.addAll(ReflectionUtils.findMethod(listener.getClass(), AfterChunkError.class));
+
+		if(skipListenerMethods.size() > 0) {
+			StepListenerFactoryBean factory = new StepListenerFactoryBean();
+			factory.setDelegate(listener);
+			skipListeners.add((SkipListener) factory.getObject());
+		}
+
+		if(chunkListenerMethods.size() > 0) {
+			StepListenerFactoryBean factory = new StepListenerFactoryBean();
+			factory.setDelegate(listener);
+			super.listener(new TerminateOnExceptionChunkListenerDelegate((ChunkListener) factory.getObject()));
+		}
+
+		@SuppressWarnings("unchecked")
+		SimpleStepBuilder result = this;
+		return result;
+	}
+
 
 	/**
 	 * Register a skip listener.
@@ -285,7 +332,7 @@ public class FaultTolerantStepBuilder<I, O> extends SimpleStepBuilder<I, O> {
 	}
 
 	/**
-	 * Sets the maximium number of failed items to skip before the step fails. Ignored if an explicit
+	 * Sets the maximum number of failed items to skip before the step fails. Ignored if an explicit
 	 * {@link #skipPolicy(SkipPolicy)} is provided.
 	 *
 	 * @param skipLimit the skip limit to set
@@ -576,7 +623,7 @@ public class FaultTolerantStepBuilder<I, O> extends SimpleStepBuilder<I, O> {
 		}
 		batchRetryTemplate.setRetryPolicy(retryPolicyWrapper);
 
-		// Co-ordinate the retry policy with the exception handler:
+		// Coordinate the retry policy with the exception handler:
 		RepeatOperations stepOperations = getStepOperations();
 		if (stepOperations instanceof RepeatTemplate) {
 			SimpleRetryExceptionHandler exceptionHandler = new SimpleRetryExceptionHandler(retryPolicyWrapper,
@@ -608,7 +655,7 @@ public class FaultTolerantStepBuilder<I, O> extends SimpleStepBuilder<I, O> {
 	}
 
 	/**
-	 * Wrap the provided {@link #setRetryPolicy(RetryPolicy)} so that it never retries explicitly non-retryable
+	 * Wrap the provided {@link org.springframework.retry.RetryPolicy} so that it never retries explicitly non-retryable
 	 * exceptions.
 	 */
 	private RetryPolicy getFatalExceptionAwareProxy(RetryPolicy retryPolicy) {

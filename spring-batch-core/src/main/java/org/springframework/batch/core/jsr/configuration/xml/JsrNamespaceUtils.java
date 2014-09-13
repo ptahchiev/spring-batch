@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,17 @@
  */
 package org.springframework.batch.core.jsr.configuration.xml;
 
-import java.util.HashMap;
-
-import org.springframework.batch.core.jsr.configuration.support.BatchPropertyBeanPostProcessor;
+import org.springframework.batch.core.jsr.launch.support.BatchPropertyBeanPostProcessor;
 import org.springframework.batch.core.jsr.configuration.support.JsrAutowiredAnnotationBeanPostProcessor;
-import org.springframework.batch.core.jsr.configuration.support.JsrBeanScopeBeanFactoryPostProcessor;
+import org.springframework.batch.core.jsr.partition.support.JsrBeanScopeBeanFactoryPostProcessor;
 import org.springframework.batch.core.jsr.configuration.support.ThreadLocalClassloaderBeanPostProcessor;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.context.annotation.AnnotationConfigUtils;
+
+import java.util.HashMap;
 
 /**
  * Utility methods used in parsing of the JSR-352 batch namespace and related helpers.
@@ -39,6 +39,9 @@ class JsrNamespaceUtils {
 	private static final String BATCH_PROPERTY_POST_PROCESSOR_BEAN_NAME = "batchPropertyPostProcessor";
 	private static final String THREAD_LOCAL_CLASS_LOADER_BEAN_POST_PROCESSOR_BEAN_NAME = "threadLocalClassloaderBeanPostProcessor";
 	private static final String BEAN_SCOPE_POST_PROCESSOR_BEAN_NAME = "beanScopeBeanPostProcessor";
+	private static final String BATCH_PROPERTY_CONTEXT_BEAN_CLASS_NAME = "org.springframework.batch.core.jsr.configuration.support.BatchPropertyContext";
+	private static final String BATCH_PROPERTY_CONTEXT_BEAN_NAME = "batchPropertyContext";
+	private static final String JSR_NAMESPACE_POST_PROCESSOR = "jsrNamespacePostProcessor";
 
 	static void autoregisterJsrBeansForNamespace(ParserContext parserContext) {
 		autoRegisterJobProperties(parserContext);
@@ -46,6 +49,12 @@ class JsrNamespaceUtils {
 		autoRegisterJsrAutowiredAnnotationBeanPostProcessor(parserContext);
 		autoRegisterThreadLocalClassloaderBeanPostProcessor(parserContext);
 		autoRegisterBeanScopeBeanFactoryPostProcessor(parserContext);
+		autoRegisterBatchPropertyContext(parserContext);
+		autoRegisterNamespacePostProcessor(parserContext);
+	}
+
+	private static void autoRegisterNamespacePostProcessor(ParserContext parserContext) {
+		registerPostProcessor(parserContext, JsrNamespacePostProcessor.class, BeanDefinition.ROLE_INFRASTRUCTURE, JSR_NAMESPACE_POST_PROCESSOR);
 	}
 
 	private static void autoRegisterBeanScopeBeanFactoryPostProcessor(
@@ -82,6 +91,18 @@ class JsrNamespaceUtils {
 			jobPropertiesBeanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 
 			parserContext.getRegistry().registerBeanDefinition(JOB_PROPERTIES_BEAN_NAME, jobPropertiesBeanDefinition);
+		}
+	}
+
+	private static void autoRegisterBatchPropertyContext(ParserContext parserContext) {
+		if (!parserContext.getRegistry().containsBeanDefinition(BATCH_PROPERTY_CONTEXT_BEAN_NAME)) {
+			AbstractBeanDefinition batchPropertyContextBeanDefinition =
+					BeanDefinitionBuilder.genericBeanDefinition(BATCH_PROPERTY_CONTEXT_BEAN_CLASS_NAME)
+					.getBeanDefinition();
+
+			batchPropertyContextBeanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+
+			parserContext.getRegistry().registerBeanDefinition(BATCH_PROPERTY_CONTEXT_BEAN_NAME, batchPropertyContextBeanDefinition);
 		}
 	}
 }

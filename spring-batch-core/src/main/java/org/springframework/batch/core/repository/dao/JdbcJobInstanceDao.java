@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2013 the original author or authors.
+ * Copyright 2006-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,10 +50,15 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Robert Kasanicky
  * @author Michael Minella
+ * @author Will Schipp
  */
 public class JdbcJobInstanceDao extends AbstractJdbcBatchMetadataDao implements
 JobInstanceDao, InitializingBean {
 
+	private static final String STAR_WILDCARD = "*";
+	
+	private static final String SQL_WILDCARD = "%";
+	
 	private static final String CREATE_JOB_INSTANCE = "INSERT into %PREFIX%JOB_INSTANCE(JOB_INSTANCE_ID, JOB_NAME, JOB_KEY, VERSION)"
 			+ " values (?, ?, ?, ?)";
 
@@ -74,13 +79,15 @@ JobInstanceDao, InitializingBean {
 	private static final String FIND_JOB_NAMES = "SELECT distinct JOB_NAME from %PREFIX%JOB_INSTANCE order by JOB_NAME";
 
 	private static final String FIND_LAST_JOBS_BY_NAME = "SELECT JOB_INSTANCE_ID, JOB_NAME from %PREFIX%JOB_INSTANCE where JOB_NAME = ? order by JOB_INSTANCE_ID desc";
+	
+	private static final String FIND_LAST_JOBS_LIKE_NAME = "SELECT JOB_INSTANCE_ID, JOB_NAME from %PREFIX%JOB_INSTANCE where JOB_NAME like ? order by JOB_INSTANCE_ID desc";
 
 	private DataFieldMaxValueIncrementer jobIncrementer;
 
 	private JobKeyGenerator<JobParameters> jobKeyGenerator = new DefaultJobKeyGenerator();
 
 	/**
-	 * In this jdbc implementation a job id is obtained by asking the
+	 * In this JDBC implementation a job id is obtained by asking the
 	 * jobIncrementer (which is likely a sequence) for the next long value, and
 	 * then passing the Id and parameter values into an INSERT statement.
 	 *
@@ -196,16 +203,15 @@ JobInstanceDao, InitializingBean {
 	 * getLastJobInstances(java.lang.String, int)
 	 */
 	@Override
-	@SuppressWarnings("rawtypes")
 	public List<JobInstance> getJobInstances(String jobName, final int start,
 			final int count) {
 
-		ResultSetExtractor extractor = new ResultSetExtractor() {
+		ResultSetExtractor<List<JobInstance>> extractor = new ResultSetExtractor<List<JobInstance>>() {
 
 			private List<JobInstance> list = new ArrayList<JobInstance>();
 
 			@Override
-			public Object extractData(ResultSet rs) throws SQLException,
+			public List<JobInstance> extractData(ResultSet rs) throws SQLException,
 			DataAccessException {
 				int rowNum = 0;
 				while (rowNum < start && rs.next()) {
@@ -221,8 +227,7 @@ JobInstanceDao, InitializingBean {
 
 		};
 
-		@SuppressWarnings("unchecked")
-		List<JobInstance> result = (List<JobInstance>) getJdbcTemplate().query(getQuery(FIND_LAST_JOBS_BY_NAME),
+		List<JobInstance> result = getJdbcTemplate().query(getQuery(FIND_LAST_JOBS_BY_NAME),
 				new Object[] { jobName }, extractor);
 
 		return result;
@@ -254,8 +259,9 @@ JobInstanceDao, InitializingBean {
 	public int getJobInstanceCount(String jobName) throws NoSuchJobException {
 
 		try {
-			return getJdbcTemplate().queryForInt(
+			return getJdbcTemplate().queryForObject(
 					getQuery(COUNT_JOBS_WITH_NAME),
+					Integer.class,
 					jobName);
 		} catch (EmptyResultDataAccessException e) {
 			throw new NoSuchJobException("No job instances were found for job name " + jobName);
@@ -296,5 +302,38 @@ JobInstanceDao, InitializingBean {
 			jobInstance.incrementVersion();
 			return jobInstance;
 		}
+	}
+
+	@Override
+	public List<JobInstance> findJobInstancesByName(String jobName, final int start, final int count) {
+		@SuppressWarnings("rawtypes")
+		ResultSetExtractor extractor = new ResultSetExtractor() {
+			private List<JobInstance> list = new ArrayList<JobInstance>();
+
+			@Override
+			public Object extractData(ResultSet rs) throws SQLException,
+			DataAccessException {
+				int rowNum = 0;
+				while (rowNum < start && rs.next()) {
+					rowNum++;
+				}
+				while (rowNum < start + count && rs.next()) {
+					ParameterizedRowMapper<JobInstance> rowMapper = new JobInstanceRowMapper();
+					list.add(rowMapper.mapRow(rs, rowNum));
+					rowNum++;
+				}
+				return list;
+			}
+		};
+
+		if (jobName.contains(STAR_WILDCARD)) {
+			jobName = jobName.replaceAll("\\" + STAR_WILDCARD, SQL_WILDCARD);
+		}
+		
+		@SuppressWarnings("unchecked")
+		List<JobInstance> result = (List<JobInstance>) getJdbcTemplate().query(getQuery(FIND_LAST_JOBS_LIKE_NAME),
+				new Object[] { jobName }, extractor);
+
+		return result;
 	}
 }

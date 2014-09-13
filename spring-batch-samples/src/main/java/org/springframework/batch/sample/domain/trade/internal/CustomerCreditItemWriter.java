@@ -39,6 +39,7 @@ public class CustomerCreditItemWriter implements ItemWriter<CustomerCredit> {
 		this.customerCreditDao = customerCreditDao;
 	}
 
+	@Override
 	public void write(List<? extends CustomerCredit> customerCredits) throws Exception {
 		for (CustomerCredit customerCredit : customerCredits) {
 			customerCreditDao.writeCredit(customerCredit);

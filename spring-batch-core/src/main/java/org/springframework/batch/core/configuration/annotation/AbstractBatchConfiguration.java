@@ -15,15 +15,11 @@
  */
 package org.springframework.batch.core.configuration.annotation;
 
-import java.util.Collection;
-
-import javax.sql.DataSource;
-
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.support.MapJobRegistry;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.core.scope.StepScope;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +30,11 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.Assert;
+import org.springframework.batch.core.scope.JobScope;
+import org.springframework.batch.core.scope.StepScope;
+
+import javax.sql.DataSource;
+import java.util.Collection;
 
 /**
  * Base {@code Configuration} class providing common structure for enabling and using Spring Batch. Customization is
@@ -44,7 +45,7 @@ import org.springframework.util.Assert;
  * @see EnableBatchProcessing
  */
 @Configuration
-@Import(StepScopeConfiguration.class)
+@Import(ScopeConfiguration.class)
 public abstract class AbstractBatchConfiguration implements ImportAware {
 
 	@Autowired
@@ -72,6 +73,9 @@ public abstract class AbstractBatchConfiguration implements ImportAware {
 	public abstract JobLauncher jobLauncher() throws Exception;
 
 	@Bean
+	public abstract JobExplorer jobExplorer() throws Exception;
+
+	@Bean
 	public JobRegistry jobRegistry() throws Exception {
 		return new MapJobRegistry();
 	}
@@ -92,16 +96,21 @@ public abstract class AbstractBatchConfiguration implements ImportAware {
 			return this.configurer;
 		}
 		if (configurers == null || configurers.isEmpty()) {
-			if (dataSources == null || dataSources.isEmpty() || dataSources.size() > 1) {
-				throw new IllegalStateException(
-						"To use the default BatchConfigurer the context must contain precisely one DataSource, found "
-								+ (dataSources == null ? 0 : dataSources.size()));
+			if (dataSources == null || dataSources.isEmpty()) {
+				DefaultBatchConfigurer configurer = new DefaultBatchConfigurer();
+				configurer.initialize();
+				this.configurer = configurer;
+				return configurer;
+			} else if(dataSources != null && dataSources.size() == 1) {
+				DataSource dataSource = dataSources.iterator().next();
+				DefaultBatchConfigurer configurer = new DefaultBatchConfigurer(dataSource);
+				configurer.initialize();
+				this.configurer = configurer;
+				return configurer;
+			} else {
+				throw new IllegalStateException("To use the default BatchConfigurer the context must contain no more than" +
+														"one DataSource, found " + dataSources.size());
 			}
-			DataSource dataSource = dataSources.iterator().next();
-			DefaultBatchConfigurer configurer = new DefaultBatchConfigurer(dataSource);
-			configurer.initialize();
-			this.configurer = configurer;
-			return configurer;
 		}
 		if (configurers.size() > 1) {
 			throw new IllegalStateException(
@@ -121,9 +130,11 @@ public abstract class AbstractBatchConfiguration implements ImportAware {
  * 
  */
 @Configuration
-class StepScopeConfiguration {
+class ScopeConfiguration {
 
 	private StepScope stepScope = new StepScope();
+
+	private JobScope jobScope = new JobScope();
 
 	@Bean
 	public StepScope stepScope() {
@@ -131,4 +142,9 @@ class StepScopeConfiguration {
 		return stepScope;
 	}
 
+	@Bean
+	public JobScope jobScope() {
+		jobScope.setAutoProxy(false);
+		return jobScope;
+	}
 }

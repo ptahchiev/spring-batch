@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.springframework.batch.core.jsr.configuration.support.BatchArtifact.BatchArtifactType;
+import org.springframework.batch.core.jsr.configuration.support.BatchArtifactType;
 import org.springframework.batch.core.jsr.partition.JsrPartitionHandler;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
@@ -174,7 +174,7 @@ public class PartitionParser {
 			if(partitionProperties != null) {
 				for (Element partition : partitionProperties) {
 					String partitionStepName = stepName + ":partition" + partition.getAttribute("partition");
-					new PropertyParser(partitionStepName, parserContext, BatchArtifactType.STEP).parsePartitionProperties(partition);
+					new PropertyParser(partitionStepName, parserContext, BatchArtifactType.STEP, partitionStepName).parseProperty(partition);
 				}
 			}
 

@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.Advised;
 import org.springframework.aop.framework.ProxyFactory;
@@ -62,8 +64,9 @@ import org.springframework.util.Assert;
  * @since 2.0
  * @see ListenerMetaData
  */
-@SuppressWarnings("rawtypes")
-public abstract class AbstractListenerFactoryBean implements FactoryBean, InitializingBean {
+public abstract class AbstractListenerFactoryBean<T> implements FactoryBean<Object>, InitializingBean {
+
+	private static final Log logger = LogFactory.getLog(AbstractListenerFactoryBean.class);
 
 	private Object delegate;
 
@@ -213,6 +216,10 @@ public abstract class AbstractListenerFactoryBean implements FactoryBean, Initia
 			if (targetSource != null && targetSource.getTargetClass() != null
 					&& listenerType.isAssignableFrom(targetSource.getTargetClass())) {
 				return true;
+			}
+
+			if(targetSource != null && targetSource.getTargetClass() != null && targetSource.getTargetClass().isInterface()) {
+				logger.warn(String.format("%s is an interface.  The implementing class will not be queried for annotation based listener configurations.  If using @StepScope on a @Bean method, be sure to return the implementing class so listner annotations can be used.", targetSource.getTargetClass().getName()));
 			}
 		}
 		for (ListenerMetaData metaData : metaDataValues) {

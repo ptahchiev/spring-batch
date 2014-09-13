@@ -19,9 +19,9 @@ package org.springframework.batch.integration.launch;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.integration.MessageHandlingException;
 import org.springframework.integration.handler.AbstractReplyProducingMessageHandler;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHandlingException;
 import org.springframework.util.Assert;
 
 /**
@@ -51,13 +51,13 @@ public class JobLaunchingGateway extends AbstractReplyProducingMessageHandler {
 	 * Launches a Batch Job using the provided request {@link Message}. The payload
 	 * of the {@link Message} <em>must</em> be an instance of {@link JobLaunchRequest}.
 	 *
-	 * @param The provided requestMessage must not be null.
+	 * @param requestMessage must not be null.
 	 * @return Generally a {@link JobExecution} will always be returned. An
 	 * exception ({@link MessageHandlingException}) will only be thrown if there
 	 * is a failure to start the job. The cause of the exception will be a
 	 * {@link JobExecutionException}.
 	 *
-	 * @throws MessageHandlingException
+	 * @throws MessageHandlingException when a job cannot be launched
 	 */
 	@Override
 	protected Object handleRequestMessage(Message<?> requestMessage) {

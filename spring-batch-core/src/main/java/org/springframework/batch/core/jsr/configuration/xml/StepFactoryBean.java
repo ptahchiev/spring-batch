@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,11 +54,12 @@ import org.springframework.util.Assert;
  * configurable on the &lt;step/&gt;.
  *
  * @author Michael Minella
+ * @author Chris Schaefer
  * @since 3.0
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
-public class StepFactoryBean extends StepParserStepFactoryBean {
+public class StepFactoryBean<I, O> extends StepParserStepFactoryBean<I, O> {
 
+	@SuppressWarnings("unused")
 	private int partitions;
 	private BatchPropertyContext batchPropertyContext;
 
@@ -84,7 +85,7 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 	 * @see FactoryBean#getObject()
 	 */
 	@Override
-	public Object getObject() throws Exception {
+	public Step getObject() throws Exception {
 		if(hasPartitionElement()) {
 			return createPartitionStep();
 		}
@@ -122,7 +123,7 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 	}
 
 	@Override
-	protected void setChunk(SimpleStepBuilder builder) {
+	protected void setChunk(SimpleStepBuilder<I, O> builder) {
 		if(timeout != null && getCommitInterval() != null) {
 			CompositeCompletionPolicy completionPolicy = new CompositeCompletionPolicy();
 			CompletionPolicy [] policies = new CompletionPolicy[2];
@@ -166,7 +167,7 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 
 		((JsrPartitionHandler) super.getPartitionHandler()).setStep(executedStep);
 
-		JsrPartitionStepBuilder builder = new JsrSimpleStepBuilder(new StepBuilder(executedStep.getName())).partitioner(executedStep);
+		JsrPartitionStepBuilder builder = new JsrSimpleStepBuilder<I, O>(new StepBuilder(executedStep.getName())).partitioner(executedStep);
 
 		enhanceCommonStep(builder);
 
@@ -190,7 +191,7 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 	 * @param tasklet {@link Tasklet} or {@link Batchlet} implementation
 	 * @throws IllegalArgumentException if tasklet does not implement either Tasklet or Batchlet
 	 */
-	public void setTasklet(Object tasklet) {
+	public void setStepTasklet(Object tasklet) {
 		if(tasklet instanceof Tasklet) {
 			super.setTasklet((Tasklet) tasklet);
 		} else if(tasklet instanceof Batchlet){
@@ -208,11 +209,12 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 	 * @param itemReader {@link ItemReader} or {@link org.springframework.batch.item.ItemReader} implementation
 	 * @throws IllegalArgumentException if itemReader does not implement either version of ItemReader
 	 */
-	public void setItemReader(Object itemReader) {
+	@SuppressWarnings("unchecked")
+	public void setStepItemReader(Object itemReader) {
 		if(itemReader instanceof org.springframework.batch.item.ItemReader) {
-			super.setItemReader((org.springframework.batch.item.ItemReader) itemReader);
+			super.setItemReader((org.springframework.batch.item.ItemReader<I>) itemReader);
 		} else if(itemReader instanceof ItemReader){
-			super.setItemReader(new ItemReaderAdapter((ItemReader) itemReader));
+			super.setItemReader(new ItemReaderAdapter<I>((ItemReader) itemReader));
 		} else {
 			throw new IllegalArgumentException("The definition of an item reader must implement either " +
 					"org.springframework.batch.item.ItemReader or javax.batch.api.chunk.ItemReader");
@@ -226,11 +228,12 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 	 * @param itemProcessor {@link ItemProcessor} or {@link org.springframework.batch.item.ItemProcessor} implementation
 	 * @throws IllegalArgumentException if itemProcessor does not implement either version of ItemProcessor
 	 */
-	public void setItemProcessor(Object itemProcessor) {
+	@SuppressWarnings("unchecked")
+	public void setStepItemProcessor(Object itemProcessor) {
 		if(itemProcessor instanceof org.springframework.batch.item.ItemProcessor) {
-			super.setItemProcessor((org.springframework.batch.item.ItemProcessor) itemProcessor);
+			super.setItemProcessor((org.springframework.batch.item.ItemProcessor<I, O>) itemProcessor);
 		} else if(itemProcessor instanceof ItemProcessor){
-			super.setItemProcessor(new ItemProcessorAdapter((ItemProcessor)itemProcessor));
+			super.setItemProcessor(new ItemProcessorAdapter<I, O>((ItemProcessor)itemProcessor));
 		} else {
 			throw new IllegalArgumentException("The definition of an item processor must implement either " +
 					"org.springframework.batch.item.ItemProcessor or javax.batch.api.chunk.ItemProcessor");
@@ -244,11 +247,12 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 	 * @param itemWriter {@link ItemWriter} or {@link org.springframework.batch.item.ItemWriter} implementation
 	 * @throws IllegalArgumentException if itemWriter does not implement either version of ItemWriter
 	 */
-	public void setItemWriter(Object itemWriter) {
+	@SuppressWarnings("unchecked")
+	public void setStepItemWriter(Object itemWriter) {
 		if(itemWriter instanceof org.springframework.batch.item.ItemWriter) {
-			super.setItemWriter((org.springframework.batch.item.ItemWriter) itemWriter);
+			super.setItemWriter((org.springframework.batch.item.ItemWriter<O>) itemWriter);
 		} else if(itemWriter instanceof ItemWriter){
-			super.setItemWriter(new ItemWriterAdapter((ItemWriter) itemWriter));
+			super.setItemWriter(new ItemWriterAdapter<O>((ItemWriter) itemWriter));
 		} else {
 			throw new IllegalArgumentException("The definition of an item writer must implement either " +
 					"org.springframework.batch.item.ItemWriter or javax.batch.api.chunk.ItemWriter");
@@ -262,7 +266,7 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 	 * @param chunkCompletionPolicy {@link CompletionPolicy} or {@link CheckpointAlgorithm} implementation
 	 * @throws IllegalArgumentException if chunkCompletionPolicy does not implement either CompletionPolicy or CheckpointAlgorithm
 	 */
-	public void setChunkCompletionPolicy(Object chunkCompletionPolicy) {
+	public void setStepChunkCompletionPolicy(Object chunkCompletionPolicy) {
 		if(chunkCompletionPolicy instanceof CompletionPolicy) {
 			super.setChunkCompletionPolicy((CompletionPolicy) chunkCompletionPolicy);
 		} else if(chunkCompletionPolicy instanceof CheckpointAlgorithm) {
@@ -274,15 +278,15 @@ public class StepFactoryBean extends StepParserStepFactoryBean {
 	}
 
 	@Override
-	protected FaultTolerantStepBuilder getFaultTolerantStepBuilder(String stepName) {
-		JsrFaultTolerantStepBuilder jsrFaultTolerantStepBuilder = new JsrFaultTolerantStepBuilder(new StepBuilder(stepName));
+	protected FaultTolerantStepBuilder<I, O> getFaultTolerantStepBuilder(String stepName) {
+		JsrFaultTolerantStepBuilder<I, O> jsrFaultTolerantStepBuilder = new JsrFaultTolerantStepBuilder<I, O>(new StepBuilder(stepName));
 		jsrFaultTolerantStepBuilder.setBatchPropertyContext(batchPropertyContext);
 		return jsrFaultTolerantStepBuilder;
 	}
 
 	@Override
-	protected SimpleStepBuilder getSimpleStepBuilder(String stepName) {
-		JsrSimpleStepBuilder jsrSimpleStepBuilder = new JsrSimpleStepBuilder(new StepBuilder(stepName));
+	protected SimpleStepBuilder<I, O> getSimpleStepBuilder(String stepName) {
+		JsrSimpleStepBuilder<I, O> jsrSimpleStepBuilder = new JsrSimpleStepBuilder<I, O>(new StepBuilder(stepName));
 		jsrSimpleStepBuilder.setBatchPropertyContext(batchPropertyContext);
 		return jsrSimpleStepBuilder;
 	}

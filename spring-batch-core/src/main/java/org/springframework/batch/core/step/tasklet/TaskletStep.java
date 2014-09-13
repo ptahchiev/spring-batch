@@ -15,8 +15,6 @@
  */
 package org.springframework.batch.core.step.tasklet;
 
-import java.util.concurrent.Semaphore;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.batch.core.BatchStatus;
@@ -53,13 +51,15 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * Simple implementation of executing the step as a call to a {@link Tasklet},
  * possibly repeated, and each call surrounded by a transaction. The structure
  * is therefore that of a loop with transaction boundary inside the loop. The
  * loop is controlled by the step operations (
- * {@link #setStepOperations(RepeatOperations)}).<br/>
- * <br/>
+ * {@link #setStepOperations(RepeatOperations)}).<br>
+ * <br>
  *
  * Clients can use interceptors in the step operations to intercept or listen to
  * the iteration on a step-wide basis, for instance to get a callback when the
@@ -80,25 +80,27 @@ public class TaskletStep extends AbstractStep {
 
 	private RepeatOperations stepOperations = new RepeatTemplate();
 
-	private final CompositeChunkListener chunkListener = new CompositeChunkListener();
+	private CompositeChunkListener chunkListener = new CompositeChunkListener();
 
 	// default to checking current thread for interruption.
 	private StepInterruptionPolicy interruptionPolicy = new ThreadStepInterruptionPolicy();
 
-	private final CompositeItemStream stream = new CompositeItemStream();
+	private CompositeItemStream stream = new CompositeItemStream();
 
 	private PlatformTransactionManager transactionManager;
 
 	private TransactionAttribute transactionAttribute = new DefaultTransactionAttribute() {
 
 		@Override
-		public boolean rollbackOn(final Throwable ex) {
+		public boolean rollbackOn(Throwable ex) {
 			return true;
 		}
 
 	};
 
 	private Tasklet tasklet;
+
+	public static final String TASKLET_TYPE_KEY = "batch.taskletType";
 
 	/**
 	 * Default constructor.
@@ -110,7 +112,7 @@ public class TaskletStep extends AbstractStep {
 	/**
 	 * @param name
 	 */
-	public TaskletStep(final String name) {
+	public TaskletStep(String name) {
 		super(name);
 	}
 
@@ -131,7 +133,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param transactionManager the transaction manager to set
 	 */
-	public void setTransactionManager(final PlatformTransactionManager transactionManager) {
+	public void setTransactionManager(PlatformTransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
 	}
 
@@ -140,7 +142,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param transactionAttribute the {@link TransactionAttribute} to set
 	 */
-	public void setTransactionAttribute(final TransactionAttribute transactionAttribute) {
+	public void setTransactionAttribute(TransactionAttribute transactionAttribute) {
 		this.transactionAttribute = transactionAttribute;
 	}
 
@@ -149,7 +151,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param tasklet the {@link Tasklet} to set
 	 */
-	public void setTasklet(final Tasklet tasklet) {
+	public void setTasklet(Tasklet tasklet) {
 		this.tasklet = tasklet;
 		if (tasklet instanceof StepExecutionListener) {
 			registerStepExecutionListener((StepExecutionListener) tasklet);
@@ -162,7 +164,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param listener a {@link ChunkListener}
 	 */
-	public void registerChunkListener(final ChunkListener listener) {
+	public void registerChunkListener(ChunkListener listener) {
 		this.chunkListener.register(listener);
 	}
 
@@ -171,7 +173,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param listeners an array of listener objects of known types.
 	 */
-	public void setChunkListeners(final ChunkListener[] listeners) {
+	public void setChunkListeners(ChunkListener[] listeners) {
 		for (int i = 0; i < listeners.length; i++) {
 			registerChunkListener(listeners[i]);
 		}
@@ -188,7 +190,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param streams an array of {@link ItemStream} objects.
 	 */
-	public void setStreams(final ItemStream[] streams) {
+	public void setStreams(ItemStream[] streams) {
 		for (int i = 0; i < streams.length; i++) {
 			registerStream(streams[i]);
 		}
@@ -200,7 +202,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param stream
 	 */
-	public void registerStream(final ItemStream stream) {
+	public void registerStream(ItemStream stream) {
 		this.stream.register(stream);
 	}
 
@@ -211,7 +213,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param stepOperations a {@link RepeatOperations} instance.
 	 */
-	public void setStepOperations(final RepeatOperations stepOperations) {
+	public void setStepOperations(RepeatOperations stepOperations) {
 		this.stepOperations = stepOperations;
 	}
 
@@ -222,7 +224,7 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 * @param interruptionPolicy a {@link StepInterruptionPolicy}
 	 */
-	public void setInterruptionPolicy(final StepInterruptionPolicy interruptionPolicy) {
+	public void setInterruptionPolicy(StepInterruptionPolicy interruptionPolicy) {
 		this.interruptionPolicy = interruptionPolicy;
 	}
 
@@ -233,7 +235,7 @@ public class TaskletStep extends AbstractStep {
 	 * given an up to date {@link BatchStatus}, and the {@link JobRepository} is
 	 * used to store the result. Various reporting information are also added to
 	 * the current context governing the step execution, which would normally be
-	 * available to the caller through the step's {@link ExecutionContext}.<br/>
+	 * available to the caller through the step's {@link ExecutionContext}.<br>
 	 *
 	 * @throws JobInterruptedException if the step or a chunk is interrupted
 	 * @throws RuntimeException if there is an exception during a chunk
@@ -241,11 +243,12 @@ public class TaskletStep extends AbstractStep {
 	 *
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
-	protected void doExecute(final StepExecution stepExecution) throws Exception {
+	protected void doExecute(StepExecution stepExecution) throws Exception {
+		stepExecution.getExecutionContext().put(TASKLET_TYPE_KEY, tasklet.getClass().getName());
+		stepExecution.getExecutionContext().put(STEP_TYPE_KEY, this.getClass().getName());
 
 		stream.update(stepExecution.getExecutionContext());
-		getJobRepository().updateStepExecutionContext(stepExecution);
+		getJobRepository().updateExecutionContext(stepExecution);
 
 		// Shared semaphore per step execution, so other step executions can run
 		// in parallel without needing the lock
@@ -254,10 +257,10 @@ public class TaskletStep extends AbstractStep {
 		stepOperations.iterate(new StepContextRepeatCallback(stepExecution) {
 
 			@Override
-			public RepeatStatus doInChunkContext(final RepeatContext repeatContext, final ChunkContext chunkContext)
+			public RepeatStatus doInChunkContext(RepeatContext repeatContext, ChunkContext chunkContext)
 					throws Exception {
 
-				final StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
+				StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
 
 				// Before starting a new transaction, check for
 				// interruption.
@@ -265,10 +268,10 @@ public class TaskletStep extends AbstractStep {
 
 				RepeatStatus result;
 				try {
-					result = (RepeatStatus) new TransactionTemplate(transactionManager, transactionAttribute)
+					result = new TransactionTemplate(transactionManager, transactionAttribute)
 					.execute(new ChunkTransactionCallback(chunkContext, semaphore));
 				}
-				catch (final UncheckedTransactionException e) {
+				catch (UncheckedTransactionException e) {
 					// Allow checked exceptions to be thrown inside callback
 					throw (Exception) e.getCause();
 				}
@@ -298,12 +301,12 @@ public class TaskletStep extends AbstractStep {
 	}
 
 	@Override
-	protected void close(final ExecutionContext ctx) throws Exception {
+	protected void close(ExecutionContext ctx) throws Exception {
 		stream.close();
 	}
 
 	@Override
-	protected void open(final ExecutionContext ctx) throws Exception {
+	protected void open(ExecutionContext ctx) throws Exception {
 		stream.open(ctx);
 	}
 
@@ -324,8 +327,7 @@ public class TaskletStep extends AbstractStep {
 	 * @author Dave Syer
 	 *
 	 */
-	@SuppressWarnings("rawtypes")
-	private class ChunkTransactionCallback extends TransactionSynchronizationAdapter implements TransactionCallback {
+	private class ChunkTransactionCallback extends TransactionSynchronizationAdapter implements TransactionCallback<RepeatStatus> {
 
 		private final StepExecution stepExecution;
 
@@ -341,14 +343,14 @@ public class TaskletStep extends AbstractStep {
 
 		private final Semaphore semaphore;
 
-		public ChunkTransactionCallback(final ChunkContext chunkContext, final Semaphore semaphore) {
+		public ChunkTransactionCallback(ChunkContext chunkContext, Semaphore semaphore) {
 			this.chunkContext = chunkContext;
 			this.stepExecution = chunkContext.getStepContext().getStepExecution();
 			this.semaphore = semaphore;
 		}
 
 		@Override
-		public void afterCompletion(final int status) {
+		public void afterCompletion(int status) {
 			try {
 				if (status != TransactionSynchronization.STATUS_COMMITTED) {
 					if (stepExecutionUpdated) {
@@ -383,12 +385,12 @@ public class TaskletStep extends AbstractStep {
 		}
 
 		@Override
-		public Object doInTransaction(final TransactionStatus status) {
+		public RepeatStatus doInTransaction(TransactionStatus status) {
 			TransactionSynchronizationManager.registerSynchronization(this);
 
 			RepeatStatus result = RepeatStatus.CONTINUABLE;
 
-			final StepContribution contribution = stepExecution.createStepContribution();
+			StepContribution contribution = stepExecution.createStepContribution();
 
 			chunkListener.beforeChunk(chunkContext);
 
@@ -406,7 +408,7 @@ public class TaskletStep extends AbstractStep {
 							result = RepeatStatus.FINISHED;
 						}
 					}
-					catch (final Exception e) {
+					catch (Exception e) {
 						if (transactionAttribute.rollbackOn(e)) {
 							chunkContext.setAttribute(ChunkListener.ROLLBACK_EXCEPTION_KEY, e);
 							throw e;
@@ -423,7 +425,7 @@ public class TaskletStep extends AbstractStep {
 						semaphore.acquire();
 						locked = true;
 					}
-					catch (final InterruptedException e) {
+					catch (InterruptedException e) {
 						logger.error("Thread interrupted while locking for repository update");
 						stepExecution.setStatus(BatchStatus.STOPPED);
 						stepExecution.setTerminateOnly();
@@ -444,32 +446,30 @@ public class TaskletStep extends AbstractStep {
 				try {
 					// Going to attempt a commit. If it fails this flag will
 					// stay false and we can use that later.
-					getJobRepository().updateStepExecutionContext(stepExecution);
+					getJobRepository().updateExecutionContext(stepExecution);
 					stepExecution.incrementCommitCount();
 					logger.debug("Saving step execution before commit: " + stepExecution);
-					getJobRepository().updateStepExecution(stepExecution);
+					getJobRepository().update(stepExecution);
 				}
-				catch (final Exception e) {
+				catch (Exception e) {
 					// If we get to here there was a problem saving the step
 					// execution and we have to fail.
-					final String msg = "JobRepository failure forcing exit with unknown status";
+					String msg = "JobRepository failure forcing rollback";
 					logger.error(msg, e);
-					stepExecution.upgradeStatus(BatchStatus.UNKNOWN);
-					stepExecution.setTerminateOnly();
 					throw new FatalStepExecutionException(msg, e);
 				}
 			}
-			catch (final Error e) {
+			catch (Error e) {
 				logger.debug("Rollback for Error: " + e.getClass().getName() + ": " + e.getMessage());
 				rollback(stepExecution);
 				throw e;
 			}
-			catch (final RuntimeException e) {
+			catch (RuntimeException e) {
 				logger.debug("Rollback for RuntimeException: " + e.getClass().getName() + ": " + e.getMessage());
 				rollback(stepExecution);
 				throw e;
 			}
-			catch (final Exception e) {
+			catch (Exception e) {
 				logger.debug("Rollback for Exception: " + e.getClass().getName() + ": " + e.getMessage());
 				rollback(stepExecution);
 				// Allow checked exceptions
@@ -480,7 +480,7 @@ public class TaskletStep extends AbstractStep {
 
 		}
 
-		private void rollback(final StepExecution stepExecution) {
+		private void rollback(StepExecution stepExecution) {
 			if (!rolledBack) {
 				stepExecution.incrementRollbackCount();
 				rolledBack = true;

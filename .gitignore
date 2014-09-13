@@ -20,3 +20,8 @@ s3.properties
 .*.swp
 .DS_Store
 .springBeans
+build
+.gradle
+pom.xml
+out
+

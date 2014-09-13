@@ -1,3 +1,18 @@
+/*
+ * Copyright 2008-2014 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.batch.sample.domain.order;
 
 import java.math.BigDecimal;
@@ -9,7 +24,6 @@ import org.springframework.batch.sample.domain.order.internal.mapper.OrderItemFi
 import org.springframework.batch.sample.support.AbstractFieldSetMapperTests;
 
 public class OrderItemFieldSetMapperTests extends AbstractFieldSetMapperTests {
-
 	private static final BigDecimal DISCOUNT_AMOUNT = new BigDecimal("1");
 	private static final BigDecimal DISCOUNT_PERC = new BigDecimal("2");
 	private static final BigDecimal HANDLING_PRICE = new BigDecimal("3");
@@ -19,6 +33,7 @@ public class OrderItemFieldSetMapperTests extends AbstractFieldSetMapperTests {
 	private static final BigDecimal SHIPPING_PRICE = new BigDecimal("7");
 	private static final BigDecimal TOTAL_PRICE = new BigDecimal("8");
 
+	@Override
 	protected Object expectedDomainObject() {
 		LineItem item = new LineItem();
 		item.setDiscountAmount(DISCOUNT_AMOUNT);
@@ -32,6 +47,7 @@ public class OrderItemFieldSetMapperTests extends AbstractFieldSetMapperTests {
 		return item;
 	}
 
+	@Override
 	protected FieldSet fieldSet() {
 		String[] tokens = new String[] { String.valueOf(DISCOUNT_AMOUNT), String.valueOf(DISCOUNT_PERC),
 				String.valueOf(HANDLING_PRICE), String.valueOf(ITEM_ID), String.valueOf(PRICE),
@@ -44,8 +60,8 @@ public class OrderItemFieldSetMapperTests extends AbstractFieldSetMapperTests {
 		return new DefaultFieldSet(tokens, columnNames);
 	}
 
+	@Override
 	protected FieldSetMapper<LineItem> fieldSetMapper() {
 		return new OrderItemFieldSetMapper();
 	}
-
 }

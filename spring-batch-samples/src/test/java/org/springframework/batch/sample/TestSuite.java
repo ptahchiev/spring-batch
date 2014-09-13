@@ -22,7 +22,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 /**
- * Temporary test suite to find bug in build....
+ * Temporary test suite to find bug in build.
  *
  */
 @Ignore

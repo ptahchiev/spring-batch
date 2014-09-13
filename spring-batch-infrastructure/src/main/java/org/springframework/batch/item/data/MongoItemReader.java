@@ -16,13 +16,7 @@
 
 package org.springframework.batch.item.data;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.mongodb.util.JSON;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.beans.factory.InitializingBean;
@@ -36,7 +30,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.util.JSON;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -60,7 +59,7 @@ import com.mongodb.util.JSON;
  * <p>
  * The implementation is thread-safe between calls to
  * {@link #open(ExecutionContext)}, but remember to use <code>saveState=false</code>
- * if used in a multi-threaded client (no restart available.
+ * if used in a multi-threaded client (no restart available).
  * </p>
  *
  *
@@ -75,6 +74,7 @@ public class MongoItemReader<T> extends AbstractPaginatedDataItemReader<T> imple
 	private Sort sort;
 	private String hint;
 	private String fields;
+	private String collection;
 	private List<Object> parameterValues;
 
 	public MongoItemReader() {
@@ -127,7 +127,7 @@ public class MongoItemReader<T> extends AbstractPaginatedDataItemReader<T> imple
 	 * JSON defining the fields to be returned from the matching documents
 	 * by MongoDB.
 	 *
-	 * @param fields JSON string that identifies the fields to sorty by.
+	 * @param fields JSON string that identifies the fields to sort by.
 	 */
 	public void setFields(String fields) {
 		this.fields = fields;
@@ -141,6 +141,13 @@ public class MongoItemReader<T> extends AbstractPaginatedDataItemReader<T> imple
 	 */
 	public void setSort(Map<String, Sort.Direction> sorts) {
 		this.sort = convertToSort(sorts);
+	}
+
+	/**
+	 * @param collection Mongo collection to be queried.
+	 */
+	public void setCollection(String collection) {
+		this.collection = collection;
 	}
 
 	/**
@@ -175,7 +182,11 @@ public class MongoItemReader<T> extends AbstractPaginatedDataItemReader<T> imple
 			mongoQuery.withHint(hint);
 		}
 
-		return (Iterator<T>) template.find(mongoQuery, type).iterator();
+		if(StringUtils.hasText(collection)) {
+			return (Iterator<T>) template.find(mongoQuery, type, collection).iterator();
+		} else {
+			return (Iterator<T>) template.find(mongoQuery, type).iterator();
+		}
 	}
 
 	/**
@@ -183,6 +194,7 @@ public class MongoItemReader<T> extends AbstractPaginatedDataItemReader<T> imple
 	 *
 	 * @see InitializingBean#afterPropertiesSet()
 	 */
+	@Override
 	public void afterPropertiesSet() throws Exception {
 		Assert.state(template != null, "An implementation of MongoOperations is required.");
 		Assert.state(type != null, "A type to convert the input into is required.");
