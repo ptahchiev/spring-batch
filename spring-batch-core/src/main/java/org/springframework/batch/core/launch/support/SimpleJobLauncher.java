@@ -95,7 +95,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 		Assert.notNull(jobParameters, "The JobParameters must not be null.");
 
 		final JobExecution jobExecution;
-		final JobExecution lastExecution = jobRepository.getLastJobExecution(job.getName(), jobParameters);
+		JobExecution lastExecution = jobRepository.getLastJobExecution(job.getName(), jobParameters);
 		if (lastExecution != null) {
 			if (!job.isRestartable()) {
 				throw new JobRestartException("JobInstance already exists and is not restartable");
@@ -104,7 +104,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 			 * validate here if it has stepExecutions that are UNKNOWN
 			 * retrieve the previous execution and check
 			 */
-			for (final StepExecution execution : lastExecution.getStepExecutions()) {
+			for (StepExecution execution : lastExecution.getStepExecutions()) {
 				if (execution.getStatus() == BatchStatus.UNKNOWN) {
 					//throw
 					throw new JobRestartException("Step [" + execution.getStepName() + "] is of status UNKNOWN");
@@ -136,7 +136,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 						logger.info("Job: [" + job + "] completed with the following parameters: [" + jobParameters
 								+ "] and the following status: [" + jobExecution.getStatus() + "]");
 					}
-					catch (final Throwable t) {
+					catch (Throwable t) {
 						logger.info("Job: [" + job
 								+ "] failed unexpectedly and fatally with the following parameters: [" + jobParameters
 								+ "]", t);
@@ -144,7 +144,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 					}
 				}
 
-				private void rethrow(final Throwable t) {
+				private void rethrow(Throwable t) {
 					if (t instanceof RuntimeException) {
 						throw (RuntimeException) t;
 					}
@@ -155,7 +155,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 				}
 			});
 		}
-		catch (final TaskRejectedException e) {
+		catch (TaskRejectedException e) {
 			jobExecution.upgradeStatus(BatchStatus.FAILED);
 			if (jobExecution.getExitStatus().equals(ExitStatus.UNKNOWN)) {
 				jobExecution.setExitStatus(ExitStatus.FAILED.addExitDescription(e));
@@ -171,7 +171,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 	 *
 	 * @param jobRepository
 	 */
-	public void setJobRepository(final JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
+	public void setJobRepository(JobRepository<JobExecution, JobInstance, StepExecution> jobRepository) {
 		this.jobRepository = jobRepository;
 	}
 
@@ -180,7 +180,7 @@ public class SimpleJobLauncher implements JobLauncher, InitializingBean {
 	 *
 	 * @param taskExecutor
 	 */
-	public void setTaskExecutor(final TaskExecutor taskExecutor) {
+	public void setTaskExecutor(TaskExecutor taskExecutor) {
 		this.taskExecutor = taskExecutor;
 	}
 
