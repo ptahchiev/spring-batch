@@ -94,7 +94,7 @@ public class MapStepExecutionDao implements StepExecutionDao<StepExecution, JobE
 		Map<Long, StepExecution> executions = executionsByJobExecutionId.get(stepExecution.getJobExecutionId());
 		Assert.notNull(executions, "step executions for given job execution are expected to be already saved");
 
-		StepExecution persistedExecution = executionsByStepExecutionId.get(stepExecution.getId());
+		final StepExecution persistedExecution = executionsByStepExecutionId.get(stepExecution.getId());
 		Assert.notNull(persistedExecution, "step execution is expected to be already saved");
 
 		synchronized (stepExecution) {
