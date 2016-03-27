@@ -22,10 +22,13 @@ import java.util.concurrent.FutureTask;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInterruptedException;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.listener.StepExecutionListenerSupport;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.repeat.RepeatStatus;
@@ -78,7 +81,11 @@ public class SystemCommandTasklet extends StepExecutionListenerSupport implement
 
 	private boolean interruptOnCancel = false;
 
-	private boolean stopped = false;
+	private volatile boolean stopped = false;
+
+	private JobExplorer jobExplorer;
+
+	private boolean stoppable = false;
 
 	/**
 	 * Execute system command and map its exit code to {@link ExitStatus} using
@@ -103,6 +110,16 @@ public class SystemCommandTasklet extends StepExecutionListenerSupport implement
 
 		while (true) {
 			Thread.sleep(checkInterval);//moved to the end of the logic
+
+			if(stoppable) {
+				JobExecution jobExecution =
+						jobExplorer.getJobExecution(chunkContext.getStepContext().getStepExecution().getJobExecutionId());
+
+				if(jobExecution.isStopping()) {
+					stopped = true;
+				}
+			}
+
 			if (systemCommandTask.isDone()) {
 				contribution.setExitStatus(systemProcessExitCodeMapper.getExitStatus(systemCommandTask.get()));
 				return RepeatStatus.FINISHED;
@@ -159,6 +176,11 @@ public class SystemCommandTasklet extends StepExecutionListenerSupport implement
 		Assert.notNull(systemProcessExitCodeMapper, "SystemProcessExitCodeMapper must be set");
 		Assert.isTrue(timeout > 0, "timeout value must be greater than zero");
 		Assert.notNull(taskExecutor, "taskExecutor is required");
+		stoppable = jobExplorer != null;
+	}
+
+	public void setJobExplorer(JobExplorer jobExplorer) {
+		this.jobExplorer = jobExplorer;
 	}
 
 	/**

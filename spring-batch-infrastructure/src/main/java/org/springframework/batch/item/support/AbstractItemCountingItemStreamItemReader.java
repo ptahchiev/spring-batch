@@ -49,17 +49,19 @@ public abstract class AbstractItemCountingItemStreamItemReader<T> extends Abstra
 	 * Read next item from input.
 	 * 
 	 * @return item
-	 * @throws Exception
+	 * @throws Exception Allows subclasses to throw checked exceptions for interpretation by the framework
 	 */
 	protected abstract T doRead() throws Exception;
 
 	/**
 	 * Open resources necessary to start reading input.
+	 * @throws Exception Allows subclasses to throw checked exceptions for interpretation by the framework
 	 */
 	protected abstract void doOpen() throws Exception;
 
 	/**
 	 * Close the resources opened in {@link #doOpen()}.
+	 * @throws Exception Allows subclasses to throw checked exceptions for interpretation by the framework
 	 */
 	protected abstract void doClose() throws Exception;
 
@@ -67,6 +69,9 @@ public abstract class AbstractItemCountingItemStreamItemReader<T> extends Abstra
 	 * Move to the given item index. Subclasses should override this method if
 	 * there is a more efficient way of moving to given index than re-reading
 	 * the input using {@link #doRead()}.
+	 *
+	 * @param itemIndex index of item (0 based) to jump to.
+	 * @throws Exception Allows subclasses to throw checked exceptions for interpretation by the framework
 	 */
 	protected void jumpToItem(int itemIndex) throws Exception {
 		for (int i = 0; i < itemIndex; i++) {
@@ -149,20 +154,24 @@ public abstract class AbstractItemCountingItemStreamItemReader<T> extends Abstra
 			maxItemCount = executionContext.getInt(getExecutionContextKey(READ_COUNT_MAX));
 		}
 
+		int itemCount = 0;
 		if (executionContext.containsKey(getExecutionContextKey(READ_COUNT))) {
-			int itemCount = executionContext.getInt(getExecutionContextKey(READ_COUNT));
-
-			if (itemCount < maxItemCount) {
-				try {
-					jumpToItem(itemCount);
-				}
-				catch (Exception e) {
-					throw new ItemStreamException("Could not move to stored position on restart", e);
-				}
-			}
-			currentItemCount = itemCount;
-
+			itemCount = executionContext.getInt(getExecutionContextKey(READ_COUNT));
 		}
+		else if(currentItemCount > 0) {
+			itemCount = currentItemCount;
+		}
+
+		if (itemCount > 0 && itemCount < maxItemCount) {
+			try {
+				jumpToItem(itemCount);
+			}
+			catch (Exception e) {
+				throw new ItemStreamException("Could not move to stored position on restart", e);
+			}
+		}
+
+		currentItemCount = itemCount;
 
 	}
 

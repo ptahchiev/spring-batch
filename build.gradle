@@ -5,12 +5,12 @@ apply plugin: 'idea'
 
 buildscript {
 	repositories {
-		maven { url 'http://repo.spring.io/plugins-release' }
+		maven { url 'https://repo.spring.io/plugins-release' }
 	}
 	dependencies {
 		classpath 'org.springframework.build.gradle:docbook-reference-plugin:0.2.8'
 		classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.5'
-		classpath 'org.springframework.build.gradle:spring-io-plugin:0.0.3.RELEASE'
+		classpath 'io.spring.gradle:spring-io-plugin:0.0.4.RELEASE'
 	}
 }
 
@@ -29,11 +29,11 @@ allprojects {
 	group = 'org.springframework.batch'
 
 	repositories {
-		maven { url 'http://repo.spring.io/libs-milestone' }
-		maven { url 'http://repo.spring.io/plugins-release' }
+		maven { url 'https://repo.spring.io/libs-milestone' }
+		maven { url 'https://repo.spring.io/plugins-release' }
         maven { url "https://repo.spring.io/libs-snapshot" }
 
-		maven { url 'http://m2.neo4j.org/content/repositories/releases'}
+		maven { url 'https://m2.neo4j.org/content/repositories/releases'}
 		mavenCentral()
 	}
 
@@ -89,7 +89,7 @@ allprojects {
 		xercesVersion = '2.8.1'
 		xmlunitVersion = '1.5'
 		xstreamVersion = '1.4.7'
-		jrubyVersion = '1.1.7'
+		jrubyVersion = '1.7.22'
 		beanshellVersion = '2.0b5'
 	}
 }
@@ -155,6 +155,10 @@ subprojects { subproject ->
 			append = false
 			destinationFile = file("$buildDir/jacoco.exec")
 		}
+
+//		testLogging {
+//			showStandardStreams = true
+//		}
 	}
 
 	task sourcesJar(type: Jar) {
@@ -215,8 +219,12 @@ configure(mainProjects) {
 			maven { url "https://repo.spring.io/libs-snapshot" }
 		}
 
-		dependencies {
-			springIoVersions "io.spring.platform:platform-versions:${platformVersion}@properties"
+		dependencyManagement {
+			springIoTestRuntime {
+				imports {
+					mavenBom "io.spring.platform:platform-bom:${platformVersion}"
+				}
+			}
 		}
 	}
 }
@@ -267,7 +275,7 @@ project('spring-batch-infrastructure') {
 		// permsize settings not passed down from GRADLE_OPTS nor JAVA_OPTS
 		// when running certain tests causing permgen OOM when using JDK7
 		// compilation is not performed with JDK6 and permgen is removed
-		// starting with JDK8.. 
+		// starting with JDK8..
 		if (JavaVersion.current().isJava7Compatible()) {
 			jvmArgs '-XX:MaxPermSize=256m'
 		}
@@ -298,7 +306,8 @@ project('spring-batch-infrastructure') {
 
 		testRuntime "com.sun.mail:javax.mail:$javaMailVersion"
 		testRuntime "org.codehaus.groovy:groovy-jsr223:$groovyVersion"
-		testRuntime "com.sun.script.jruby:jruby-engine:$jrubyVersion"
+		testRuntime "org.jruby:jruby:$jrubyVersion"
+
 		testRuntime "org.beanshell:bsh:$beanshellVersion"
 
 		optional "javax.jms:jms-api:1.1-rev-1"
@@ -351,6 +360,7 @@ project('spring-batch-core-tests') {
     project.tasks.findByPath("artifactoryPublish")?.enabled = false
 	dependencies {
 		compile project(":spring-batch-core")
+		compile project(":spring-batch-infrastructure")
 		compile "commons-dbcp:commons-dbcp:$commonsDdbcpVersion"
 		compile "org.springframework:spring-jdbc:$springVersion"
 		compile "org.springframework.retry:spring-retry:$springRetryVersion"
@@ -360,12 +370,13 @@ project('spring-batch-core-tests') {
 		testCompile "org.hsqldb:hsqldb:$hsqldbVersion"
 		testCompile "commons-io:commons-io:$commonsIoVersion"
 		testCompile "org.apache.derby:derby:$derbyVersion"
-        testCompile("junit:junit:${junitVersion}") {
-            exclude group:'org.hamcrest', module:'hamcrest-core'
-        }
-        testCompile("org.hamcrest:hamcrest-all:$hamcrestVersion")
+		testCompile("junit:junit:${junitVersion}") {
+			exclude group:'org.hamcrest', module:'hamcrest-core'
+		}
+		testCompile("org.hamcrest:hamcrest-all:$hamcrestVersion")
 		testCompile "log4j:log4j:$log4jVersion"
 		testCompile "org.springframework:spring-test:$springVersion"
+		testCompile "org.springframework:spring-jdbc:$springVersion"
 
 		runtime "mysql:mysql-connector-java:$mysqlVersion"
 		runtime "postgresql:postgresql:$postgresqlVersion"

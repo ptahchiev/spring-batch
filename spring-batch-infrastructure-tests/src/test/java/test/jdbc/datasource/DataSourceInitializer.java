@@ -105,7 +105,6 @@ public class DataSourceInitializer implements InitializingBean, DisposableBean {
 		final JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 		String[] scripts;
 		try {
-			@SuppressWarnings("unchecked")
 			String[] list = StringUtils.delimitedListToStringArray(stripComments(IOUtils.readLines(scriptResource
 					.getInputStream())), ";");
 			scripts = list;
@@ -140,10 +139,10 @@ public class DataSourceInitializer implements InitializingBean, DisposableBean {
 	}
 
 	private String stripComments(List<String> list) {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		for (String line : list) {
 			if (!line.startsWith("//") && !line.startsWith("--")) {
-				buffer.append(line + "\n");
+				buffer.append(line).append("\n");
 			}
 		}
 		return buffer.toString();

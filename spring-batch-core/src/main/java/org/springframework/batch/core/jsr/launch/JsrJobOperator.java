@@ -66,6 +66,7 @@ import org.springframework.batch.core.step.StepLocator;
 import org.springframework.batch.core.step.tasklet.StoppableTasklet;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.core.step.tasklet.TaskletStep;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.access.BeanFactoryLocator;
@@ -75,12 +76,14 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.Assert;
 
 /**
@@ -121,6 +124,9 @@ import org.springframework.util.Assert;
  * 	&lt;/bean&gt;
  * &lt;/beans&gt;
  *
+ * A custom configuration of the above components can be specified by providing a system property JSR-352-BASE-CONTEXT.
+ * The location that is provided by this system property will override any beans as defined in baseContext.xml.
+ *
  * Calls to {@link JobOperator#start(String, Properties)} will provide a child context to the above context
  * using the job definition and batch.xml if provided.
  *
@@ -136,7 +142,7 @@ import org.springframework.util.Assert;
  * @author Chris Schaefer
  * @since 3.0
  */
-public class JsrJobOperator implements JobOperator, InitializingBean {
+public class JsrJobOperator implements JobOperator, ApplicationContextAware, InitializingBean {
 	private static final String JSR_JOB_CONTEXT_BEAN_NAME = "jsr_jobContext";
 	private final Log logger = LogFactory.getLog(getClass());
 
@@ -144,7 +150,8 @@ public class JsrJobOperator implements JobOperator, InitializingBean {
 	private JobRepository jobRepository;
 	private TaskExecutor taskExecutor;
 	private JobParametersConverter jobParametersConverter;
-	private static ApplicationContext baseContext;
+	private ApplicationContext baseContext;
+	private PlatformTransactionManager transactionManager;
 	private static ExecutingJobRegistry jobRegistry = new ExecutingJobRegistry();
 
 	/**
@@ -174,14 +181,16 @@ public class JsrJobOperator implements JobOperator, InitializingBean {
 	 * @param jobRepository an instance of Spring Batch's {@link JobOperator}
 	 * @param jobParametersConverter an instance of Spring Batch's {@link JobParametersConverter}
 	 */
-	public JsrJobOperator(JobExplorer jobExplorer, JobRepository jobRepository, JobParametersConverter jobParametersConverter) {
+	public JsrJobOperator(JobExplorer jobExplorer, JobRepository jobRepository, JobParametersConverter jobParametersConverter, PlatformTransactionManager transactionManager) {
 		Assert.notNull(jobExplorer, "A JobExplorer is required");
 		Assert.notNull(jobRepository, "A JobRepository is required");
 		Assert.notNull(jobParametersConverter, "A ParametersConverter is required");
+		Assert.notNull(transactionManager, "A PlatformTransactionManager is required");
 
 		this.jobExplorer = jobExplorer;
 		this.jobRepository = jobRepository;
 		this.jobParametersConverter = jobParametersConverter;
+		this.transactionManager = transactionManager;
 	}
 
 	public void setJobExplorer(JobExplorer jobExplorer) {
@@ -194,6 +203,12 @@ public class JsrJobOperator implements JobOperator, InitializingBean {
 		Assert.notNull(jobRepository, "A JobRepository is required");
 
 		this.jobRepository = jobRepository;
+	}
+
+	public void setTransactionManager(PlatformTransactionManager transactionManager) {
+		Assert.notNull(transactionManager, "A PlatformTransactionManager is required");
+
+		this.transactionManager = transactionManager;
 	}
 
 	public void setTaskExecutor(TaskExecutor taskExecutor) {
@@ -607,7 +622,14 @@ public class JsrJobOperator implements JobOperator, InitializingBean {
 		beanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
 		batchContext.registerBeanDefinition(JSR_JOB_CONTEXT_BEAN_NAME, beanDefinition);
 
-		batchContext.setParent(baseContext);
+		if(baseContext != null) {
+			batchContext.setParent(baseContext);
+		} else {
+			batchContext.getBeanFactory().registerSingleton("jobExplorer", jobExplorer);
+			batchContext.getBeanFactory().registerSingleton("jobRepository", jobRepository);
+			batchContext.getBeanFactory().registerSingleton("jobParametersConverter", jobParametersConverter);
+			batchContext.getBeanFactory().registerSingleton("transactionManager", transactionManager);
+		}
 
 		try {
 			batchContext.refresh();
@@ -743,6 +765,11 @@ public class JsrJobOperator implements JobOperator, InitializingBean {
 		catch (NoSuchJobException e) {
 			logger.warn("Cannot find Job object",e);
 		}
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		baseContext = applicationContext;
 	}
 
 	private static class ExecutingJobRegistry {

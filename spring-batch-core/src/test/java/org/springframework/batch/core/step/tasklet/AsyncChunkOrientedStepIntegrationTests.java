@@ -120,7 +120,7 @@ public class AsyncChunkOrientedStepIntegrationTests {
 	}
 
 	@Test
-	@Ignore //FIXME
+	@Ignore
 	public void testStatus() throws Exception {
 
 		step.setTasklet(new TestingChunkOrientedTasklet<String>(getReader(new String[] { "a", "b", "c", "a", "b", "c",

@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.batch.repeat.RepeatCallback;
 import org.springframework.batch.repeat.RepeatContext;
 import org.springframework.batch.repeat.RepeatStatus;
@@ -41,6 +42,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jms.connection.SessionProxy;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.SessionCallback;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
@@ -51,6 +53,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "/org/springframework/batch/jms/jms-context.xml")
+@DirtiesContext
 public class SynchronousTests implements ApplicationContextAware {
 
 	@Autowired
@@ -65,6 +68,8 @@ public class SynchronousTests implements ApplicationContextAware {
 	private JdbcTemplate jdbcTemplate;
 
 	private ApplicationContext applicationContext;
+
+	private List<String> list = new ArrayList<String>();
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -94,8 +99,6 @@ public class SynchronousTests implements ApplicationContextAware {
 		assertEquals(0, count);
 	}
 
-	List<String> list = new ArrayList<String>();
-
 	@Transactional
 	@Test
 	public void testCommit() throws Exception {
@@ -115,6 +118,9 @@ public class SynchronousTests implements ApplicationContextAware {
 		int count = jdbcTemplate.queryForObject("select count(*) from T_BARS", Integer.class);
 		assertEquals(2, count);
 
+		assertTrue(list.contains("foo"));
+		assertTrue(list.contains("bar"));
+
 		String text = (String) jmsTemplate.receiveAndConvert("queue");
 		assertEquals(null, text);
 
@@ -122,6 +128,8 @@ public class SynchronousTests implements ApplicationContextAware {
 
 	@Test
 	public void testFullRollback() throws Exception {
+
+		onSetUpBeforeTransaction();
 
 		assertInitialState();
 
@@ -159,7 +167,8 @@ public class SynchronousTests implements ApplicationContextAware {
 		assertTrue("Foo not on queue", msgs.contains("foo"));
 	}
 
-	@Transactional @Test
+	@Transactional
+	@Test
 	public void testPartialRollback() throws Exception {
 
 		// The JmsTemplate is used elsewhere outside a transaction, so

@@ -15,8 +15,15 @@
  */
 package org.springframework.batch.core.configuration.support;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.DuplicateJobException;
@@ -29,12 +36,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.Assert;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Default implementation of {@link JobLoader}. Uses a {@link JobRegistry} to
@@ -118,6 +119,7 @@ public class DefaultJobLoader implements JobLoader, InitializingBean {
 			doUnregister(jobName);
 		}
 		contexts.clear();
+		contextToJobNames.clear();
 	}
 
 	@Override
@@ -127,7 +129,9 @@ public class DefaultJobLoader implements JobLoader, InitializingBean {
 		if (contexts.containsKey(factory)) {
 			ConfigurableApplicationContext context = contexts.get(factory);
 			for (String name : contextToJobNames.get(context)) {
-				logger.debug("Unregistering job: " + name + " from context: " + context.getDisplayName());
+				if (logger.isDebugEnabled()) {
+					logger.debug("Unregistering job: " + name + " from context: " + context.getDisplayName());
+				}
 				doUnregister(name);
 			}
 			context.close();
@@ -177,11 +181,15 @@ public class DefaultJobLoader implements JobLoader, InitializingBean {
 
 				// On reload try to unregister first
 				if (unregister) {
-					logger.debug("Unregistering job: " + jobName + " from context: " + context.getDisplayName());
+					if (logger.isDebugEnabled()) {
+						logger.debug("Unregistering job: " + jobName + " from context: " + context.getDisplayName());
+					}
 					doUnregister(jobName);
 				}
 
-				logger.debug("Registering job: " + jobName + " from context: " + context.getDisplayName());
+				if (logger.isDebugEnabled()) {
+					logger.debug("Registering job: " + jobName + " from context: " + context.getDisplayName());
+				}
 				doRegister(context, job);
 				jobsRegistered.add(jobName);
 			}

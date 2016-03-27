@@ -15,26 +15,23 @@
  */
 package org.springframework.batch.core.jsr.launch;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobInstance;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.converter.JobParametersConverter;
-import org.springframework.batch.core.converter.JobParametersConverterSupport;
-import org.springframework.batch.core.explore.JobExplorer;
-import org.springframework.batch.core.explore.support.SimpleJobExplorer;
-import org.springframework.batch.core.jsr.AbstractJsrTestCase;
-import org.springframework.batch.core.jsr.JsrJobParametersConverter;
-import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.core.step.JobRepositorySupport;
-import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.core.task.SyncTaskExecutor;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 import javax.batch.api.AbstractBatchlet;
 import javax.batch.api.Batchlet;
@@ -47,20 +44,40 @@ import javax.batch.operations.NoSuchJobExecutionException;
 import javax.batch.operations.NoSuchJobInstanceException;
 import javax.batch.runtime.BatchRuntime;
 import javax.batch.runtime.BatchStatus;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import javax.sql.DataSource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobInstance;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.configuration.annotation.DataSourceConfiguration;
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.converter.JobParametersConverter;
+import org.springframework.batch.core.converter.JobParametersConverterSupport;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.explore.support.SimpleJobExplorer;
+import org.springframework.batch.core.jsr.AbstractJsrTestCase;
+import org.springframework.batch.core.jsr.JsrJobParametersConverter;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.JobRepositorySupport;
+import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
+import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.SyncTaskExecutor;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.PlatformTransactionManager;
 
 public class JsrJobOperatorTests extends AbstractJsrTestCase {
 
@@ -73,10 +90,12 @@ public class JsrJobOperatorTests extends AbstractJsrTestCase {
 	private static final long TIMEOUT = 10000L;
 
 	@Before
-	public void setup() {
+	public void setup() throws Exception {
+		resetBaseContext();
+
 		MockitoAnnotations.initMocks(this);
 		parameterConverter = new JobParametersConverterSupport();
-		jsrJobOperator = new JsrJobOperator(jobExplorer, jobRepository, parameterConverter);
+		jsrJobOperator = new JsrJobOperator(jobExplorer, jobRepository, parameterConverter, new ResourcelessTransactionManager());
 	}
 
 	@Test
@@ -88,24 +107,83 @@ public class JsrJobOperatorTests extends AbstractJsrTestCase {
 	@Test
 	public void testNullsInConstructor() {
 		try {
-			new JsrJobOperator(null, new JobRepositorySupport(), parameterConverter);
+			new JsrJobOperator(null, new JobRepositorySupport(), parameterConverter, null);
 			fail("JobExplorer should be required");
 		} catch (IllegalArgumentException correct) {
 		}
 
 		try {
-			new JsrJobOperator(new SimpleJobExplorer(null, null, null, null), null, parameterConverter);
+			new JsrJobOperator(new SimpleJobExplorer(null, null, null, null), null, parameterConverter, null);
 			fail("JobRepository should be required");
 		} catch (IllegalArgumentException correct) {
 		}
 
 		try {
-			new JsrJobOperator(new SimpleJobExplorer(null, null, null, null), new JobRepositorySupport(), null);
+			new JsrJobOperator(new SimpleJobExplorer(null, null, null, null), new JobRepositorySupport(), null, null);
 			fail("ParameterConverter should be required");
 		} catch (IllegalArgumentException correct) {
 		}
 
-		new JsrJobOperator(new SimpleJobExplorer(null, null, null, null), new JobRepositorySupport(), parameterConverter);
+		try {
+			new JsrJobOperator(new SimpleJobExplorer(null, null, null, null), new JobRepositorySupport(), parameterConverter, null);
+		}
+		catch (IllegalArgumentException correct) {
+		}
+
+		new JsrJobOperator(new SimpleJobExplorer(null, null, null, null), new JobRepositorySupport(), parameterConverter, new ResourcelessTransactionManager());
+	}
+
+	@Test
+	public void testCustomBaseContextJsrCompliant() throws Exception {
+		System.setProperty("JSR-352-BASE-CONTEXT", "META-INF/alternativeJsrBaseContext.xml");
+
+		JobOperator jobOperator = BatchRuntime.getJobOperator();
+
+		Object transactionManager = ReflectionTestUtils.getField(jobOperator, "transactionManager");
+		assertTrue(transactionManager instanceof ResourcelessTransactionManager);
+
+		long executionId = jobOperator.start("longRunningJob", null);
+		// Give the job a chance to get started
+		Thread.sleep(1000L);
+		jobOperator.stop(executionId);
+		// Give the job the chance to finish stopping
+		Thread.sleep(1000L);
+
+		assertEquals(BatchStatus.STOPPED, jobOperator.getJobExecution(executionId).getBatchStatus());
+
+		System.getProperties().remove("JSR-352-BASE-CONTEXT");
+	}
+
+	@Test
+	public void testCustomBaseContextCustomWired() throws Exception {
+
+		GenericApplicationContext context = new AnnotationConfigApplicationContext(BatchConfgiuration.class);
+
+		JobOperator jobOperator = (JobOperator) context.getBean("jobOperator");
+
+		assertEquals(context, ReflectionTestUtils.getField(jobOperator, "baseContext"));
+
+		long executionId = jobOperator.start("longRunningJob", null);
+		// Give the job a chance to get started
+		Thread.sleep(1000L);
+		jobOperator.stop(executionId);
+		// Give the job the chance to finish stopping
+		Thread.sleep(1000L);
+
+		assertEquals(BatchStatus.STOPPED, jobOperator.getJobExecution(executionId).getBatchStatus());
+
+		System.getProperties().remove("JSR-352-BASE-CONTEXT");
+	}
+
+	private void resetBaseContext() throws NoSuchFieldException, IllegalAccessException {
+		Field instancesField = ContextSingletonBeanFactoryLocator.class.getDeclaredField("instances");
+		instancesField.setAccessible(true);
+
+		Field instancesModifiers = Field.class.getDeclaredField("modifiers");
+		instancesModifiers.setAccessible(true);
+		instancesModifiers.setInt(instancesField, instancesField.getModifiers() & ~Modifier.FINAL);
+
+		instancesField.set(null, new HashMap());
 	}
 
 	@Test
@@ -597,6 +675,21 @@ public class JsrJobOperatorTests extends AbstractJsrTestCase {
 		public String process() throws Exception {
 			closed = false;
 			return null;
+		}
+	}
+
+	@Configuration
+	@Import(DataSourceConfiguration.class)
+	@EnableBatchProcessing
+	public static class BatchConfgiuration {
+
+		@Bean
+		public JsrJobOperator jobOperator(JobExplorer jobExplorer, JobRepository jobrepository, DataSource dataSource,
+				PlatformTransactionManager transactionManager) throws Exception{
+
+			JsrJobParametersConverter jobParametersConverter = new JsrJobParametersConverter(dataSource);
+			jobParametersConverter.afterPropertiesSet();
+			return new JsrJobOperator(jobExplorer, jobrepository, jobParametersConverter, transactionManager);
 		}
 	}
 }

@@ -62,7 +62,7 @@ public class MapStepExecutionDao implements StepExecutionDao<StepExecution, JobE
 				field.setAccessible(true);
 				field.set(targetExecution, field.get(sourceExecution));
 			}
-		});
+		}, ReflectionUtils.COPYABLE_FIELDS);
 	}
 
 	@Override

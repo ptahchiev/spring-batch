@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2012 the original author or authors.
+ * Copyright 2006-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,11 @@ package org.springframework.batch.item.database.support;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.HashMap;
+
 import org.junit.Test;
+
+import org.springframework.batch.item.database.Order;
 
 /**
  * @author Thomas Risberg
@@ -39,7 +43,7 @@ public class MySqlPagingQueryProviderTests extends AbstractSqlPagingQueryProvide
 
 	@Test @Override
 	public void testGenerateRemainingPagesQuery() {
-		String sql = "SELECT id, name, age FROM foo WHERE bar = 1 AND ((id > ?)) ORDER BY id ASC LIMIT 100";
+		String sql = "SELECT id, name, age FROM foo WHERE (bar = 1) AND ((id > ?)) ORDER BY id ASC LIMIT 100";
 		String s = pagingQueryProvider.generateRemainingPagesQuery(pageSize);
 		assertEquals(sql, s);
 	}
@@ -94,6 +98,24 @@ public class MySqlPagingQueryProviderTests extends AbstractSqlPagingQueryProvide
 		assertEquals(sql, s);
 	}
 
+	@Test
+	public void testFirstPageSqlWithAliases() {
+		this.pagingQueryProvider = new MySqlPagingQueryProvider();
+		this.pagingQueryProvider.setSelectClause("SELECT owner.id as ownerid, first_name, last_name, dog_name ");
+		this.pagingQueryProvider.setFromClause("FROM dog_owner owner INNER JOIN dog ON owner.id = dog.id ");
+		this.pagingQueryProvider.setSortKeys(new HashMap<String, Order>() {{
+			put("owner.id", Order.ASCENDING);
+		}});
+
+		String firstPage = this.pagingQueryProvider.generateFirstPageQuery(5);
+		String jumpToItemQuery = this.pagingQueryProvider.generateJumpToItemQuery(7, 5);
+		String remainingPagesQuery = this.pagingQueryProvider.generateRemainingPagesQuery(5);
+
+		assertEquals("SELECT owner.id as ownerid, first_name, last_name, dog_name FROM dog_owner owner INNER JOIN dog ON owner.id = dog.id ORDER BY owner.id ASC LIMIT 5", firstPage);
+		assertEquals("SELECT owner.id FROM dog_owner owner INNER JOIN dog ON owner.id = dog.id ORDER BY owner.id ASC LIMIT 4, 1", jumpToItemQuery);
+		assertEquals("SELECT owner.id as ownerid, first_name, last_name, dog_name FROM dog_owner owner INNER JOIN dog ON owner.id = dog.id WHERE ((owner.id > ?)) ORDER BY owner.id ASC LIMIT 5", remainingPagesQuery);
+	}
+
 	@Override
 	public String getFirstPageSqlWithMultipleSortKeys() {
 		return "SELECT id, name, age FROM foo WHERE bar = 1 ORDER BY name ASC, id DESC LIMIT 100";
@@ -101,7 +123,7 @@ public class MySqlPagingQueryProviderTests extends AbstractSqlPagingQueryProvide
 
 	@Override
 	public String getRemainingSqlWithMultipleSortKeys() {
-		return "SELECT id, name, age FROM foo WHERE bar = 1 AND ((name > ?) OR (name = ? AND id < ?)) ORDER BY name ASC, id DESC LIMIT 100";
+		return "SELECT id, name, age FROM foo WHERE (bar = 1) AND ((name > ?) OR (name = ? AND id < ?)) ORDER BY name ASC, id DESC LIMIT 100";
 	}
 
 	@Override

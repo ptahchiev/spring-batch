@@ -122,7 +122,6 @@ public class DataSourceInitializer implements InitializingBean, DisposableBean {
 		transactionTemplate.execute(new TransactionCallback<Void>() {
 
             @Override
-			@SuppressWarnings("unchecked")
 			public Void doInTransaction(TransactionStatus status) {
 				JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 				String[] scripts;
@@ -157,10 +156,10 @@ public class DataSourceInitializer implements InitializingBean, DisposableBean {
 	}
 
 	private String stripComments(List<String> list) {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		for (String line : list) {
 			if (!line.startsWith("//") && !line.startsWith("--")) {
-				buffer.append(line + "\n");
+				buffer.append(line).append("\n");
 			}
 		}
 		return buffer.toString();

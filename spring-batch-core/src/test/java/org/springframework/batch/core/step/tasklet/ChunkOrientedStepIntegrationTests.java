@@ -90,7 +90,7 @@ public class ChunkOrientedStepIntegrationTests {
 
 	@SuppressWarnings("serial")
 	@Test
-	@Ignore //FIXME
+	@Ignore
 	public void testStatusForCommitFailedException() throws Exception {
 
 		step.setTasklet(new TestingChunkOrientedTasklet<String>(getReader(new String[] { "a", "b", "c" }),

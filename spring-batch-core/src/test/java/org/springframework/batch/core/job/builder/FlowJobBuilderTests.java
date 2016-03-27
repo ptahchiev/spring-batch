@@ -140,6 +140,30 @@ public class FlowJobBuilderTests {
 	}
 
 	@Test
+	public void testBuildSplitUsingStartAndAdd_BATCH_2346() throws Exception {
+		Flow subflow1 = new FlowBuilder<Flow>("subflow1").from(step2).end();
+		Flow subflow2 = new FlowBuilder<Flow>("subflow2").from(step3).end();
+		Flow splitflow = new FlowBuilder<Flow>("splitflow").start(subflow1).split(new SimpleAsyncTaskExecutor())
+				.add(subflow2).build();
+
+		FlowJobBuilder builder = new JobBuilder("flow").repository(jobRepository).start(splitflow).end();
+		builder.preventRestart().build().execute(execution);
+		assertEquals(BatchStatus.COMPLETED, execution.getStatus());
+		assertEquals(2, execution.getStepExecutions().size());
+	}
+
+    @Test
+    public void testBuildSplit_BATCH_2282() throws Exception {
+        Flow flow1 = new FlowBuilder<Flow>("subflow1").from(step1).end();
+        Flow flow2 = new FlowBuilder<Flow>("subflow2").from(step2).end();
+        Flow splitFlow = new FlowBuilder<Flow>("splitflow").split(new SimpleAsyncTaskExecutor()).add(flow1, flow2).build();
+        FlowJobBuilder builder = new JobBuilder("flow").repository(jobRepository).start(splitFlow).end();
+        builder.preventRestart().build().execute(execution);
+        assertEquals(BatchStatus.COMPLETED, execution.getStatus());
+        assertEquals(2, execution.getStepExecutions().size());
+    }
+
+	@Test
 	public void testBuildDecision() throws Exception {
 		JobExecutionDecider decider = new JobExecutionDecider() {
 			private int count = 0;

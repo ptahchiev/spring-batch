@@ -40,15 +40,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean;
 import org.springframework.batch.item.sample.Foo;
-import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.jdbc.JdbcTestUtils;
 
 /**
  * @author Dave Syer
@@ -83,8 +84,9 @@ public class JdbcPagingItemReaderAsyncTests {
 
 	@Before
 	public void init() {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-		maxId = jdbcTemplate.queryForObject("SELECT MAX(ID) from T_FOOS", Integer.class);
+		JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+		Integer tempMaxId = jdbcTemplate.queryForObject("SELECT MAX(ID) from T_FOOS", Integer.class);
+		maxId = tempMaxId != null? tempMaxId : 0;
 		for (int i = ITEM_COUNT; i > maxId; i--) {
 			jdbcTemplate.update("INSERT into T_FOOS (ID,NAME,VALUE) values (?, ?, ?)", i, "foo" + i, i);
 		}
@@ -168,7 +170,7 @@ public class JdbcPagingItemReaderAsyncTests {
 		sortKeys.put("VALUE", Order.ASCENDING);
 		factory.setSortKeys(sortKeys);
 		reader.setQueryProvider(factory.getObject());
-		reader.setRowMapper(new ParameterizedRowMapper<Foo>() {
+		reader.setRowMapper(new RowMapper<Foo>() {
 			@Override
 			public Foo mapRow(ResultSet rs, int i) throws SQLException {
 				Foo foo = new Foo();
