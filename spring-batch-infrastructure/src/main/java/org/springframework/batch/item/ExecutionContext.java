@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Douglas Kaminsky
  */
 @SuppressWarnings("serial")
-public class ExecutionContext implements Serializable {
+public class ExecutionContext implements org.springframework.batch.item.intf.ExecutionContext, Serializable {
 
 	private volatile boolean dirty = false;
 

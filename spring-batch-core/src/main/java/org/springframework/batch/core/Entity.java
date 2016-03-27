@@ -31,7 +31,7 @@ import org.springframework.util.ClassUtils;
  *
  */
 @SuppressWarnings("serial")
-public class Entity implements Serializable {
+public class Entity implements org.springframework.batch.item.intf.Entity, Serializable {
 
 	private Long id;
 
