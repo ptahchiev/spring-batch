@@ -248,7 +248,7 @@ public class TaskletStep extends AbstractStep {
 		stepExecution.getExecutionContext().put(STEP_TYPE_KEY, this.getClass().getName());
 
 		stream.update(stepExecution.getExecutionContext());
-		getJobRepository().updateExecutionContext(stepExecution);
+		getJobRepository().updateStepExecutionContext(stepExecution);
 
 		// Shared semaphore per step execution, so other step executions can run
 		// in parallel without needing the lock
@@ -448,12 +448,12 @@ public class TaskletStep extends AbstractStep {
 				try {
 					// Going to attempt a commit. If it fails this flag will
 					// stay false and we can use that later.
-					getJobRepository().updateExecutionContext(stepExecution);
+					getJobRepository().updateStepExecutionContext(stepExecution);
 					stepExecution.incrementCommitCount();
 					if (logger.isDebugEnabled()) {
 						logger.debug("Saving step execution before commit: " + stepExecution);
 					}
-					getJobRepository().update(stepExecution);
+					getJobRepository().updateStepExecution(stepExecution);
 				}
 				catch (Exception e) {
 					// If we get to here there was a problem saving the step

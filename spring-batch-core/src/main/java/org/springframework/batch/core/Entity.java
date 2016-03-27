@@ -17,6 +17,7 @@
 package org.springframework.batch.core;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import org.springframework.util.ClassUtils;
 
@@ -82,6 +83,26 @@ public class Entity implements org.springframework.batch.item.intf.Entity, Seria
 		} else {
 			version = version + 1;
 		}
+	}
+
+	@Override
+	public Date getCreatedDate() {
+		return null;
+	}
+
+	@Override
+	public void setCreatedDate(Date creationDate) {
+
+	}
+
+	@Override
+	public Date getLastModifiedDate() {
+		return null;
+	}
+
+	@Override
+	public void setLastModifiedDate(Date lastModifiedDate) {
+
 	}
 
 	@Override

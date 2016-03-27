@@ -27,123 +27,124 @@ import org.springframework.batch.core.job.StepHandler;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.JobRestartException;
 
+import javax.batch.runtime.JobInstance;
+
 /**
  * Implementation of {@link FlowExecutor} for use in components that need to
  * execute a flow related to a {@link JobExecution}.
  *
  * @author Dave Syer
  * @author Michael Minella
- *
  */
 public class JobFlowExecutor implements FlowExecutor {
 
-	private final ThreadLocal<StepExecution> stepExecutionHolder = new ThreadLocal<StepExecution>();
+    private final ThreadLocal<StepExecution> stepExecutionHolder = new ThreadLocal<StepExecution>();
 
-	private final JobExecution execution;
+    private final JobExecution execution;
 
-	protected ExitStatus exitStatus = ExitStatus.EXECUTING;
+    protected ExitStatus exitStatus = ExitStatus.EXECUTING;
 
-	private final StepHandler stepHandler;
+    private final StepHandler stepHandler;
 
-	private final JobRepository jobRepository;
+    private final JobRepository<org.springframework.batch.core.intf.JobExecution, JobInstance, StepExecution> jobRepository;
 
-	/**
-	 * @param execution
-	 */
-	public JobFlowExecutor(JobRepository jobRepository, StepHandler stepHandler, JobExecution execution) {
-		this.jobRepository = jobRepository;
-		this.stepHandler = stepHandler;
-		this.execution = execution;
-		stepExecutionHolder.set(null);
-	}
+    /**
+     * @param execution
+     */
+    public JobFlowExecutor(JobRepository<org.springframework.batch.core.intf.JobExecution, JobInstance, StepExecution> jobRepository, StepHandler stepHandler,
+                           JobExecution execution) {
+        this.jobRepository = jobRepository;
+        this.stepHandler = stepHandler;
+        this.execution = execution;
+        stepExecutionHolder.set(null);
+    }
 
-	@Override
-	public String executeStep(Step step) throws JobInterruptedException, JobRestartException,
-	StartLimitExceededException {
-		boolean isRerun = isStepRestart(step);
-		StepExecution stepExecution = stepHandler.handleStep(step, execution);
-		stepExecutionHolder.set(stepExecution);
+    @Override
+    public String executeStep(Step step) throws JobInterruptedException, JobRestartException, StartLimitExceededException {
+        boolean isRerun = isStepRestart(step);
+        StepExecution stepExecution = stepHandler.handleStep(step, execution);
+        stepExecutionHolder.set(stepExecution);
 
-		if (stepExecution == null) {
-			return  ExitStatus.COMPLETED.getExitCode();
-		}
-		if (stepExecution.isTerminateOnly()) {
-			throw new JobInterruptedException("Step requested termination: "+stepExecution, stepExecution.getStatus());
-		}
+        if (stepExecution == null) {
+            return ExitStatus.COMPLETED.getExitCode();
+        }
+        if (stepExecution.isTerminateOnly()) {
+            throw new JobInterruptedException("Step requested termination: " + stepExecution, stepExecution.getStatus());
+        }
 
-		if(isRerun) {
-			stepExecution.getExecutionContext().put("batch.restart", true);
-		}
+        if (isRerun) {
+            stepExecution.getExecutionContext().put("batch.restart", true);
+        }
 
-		return stepExecution.getExitStatus().getExitCode();
-	}
+        return stepExecution.getExitStatus().getExitCode();
+    }
 
-	private boolean isStepRestart(Step step) {
-		int count = jobRepository.getStepExecutionCount(execution.getJobInstance(), step.getName());
+    private boolean isStepRestart(Step step) {
+        int count = jobRepository.getStepExecutionCount(execution.getJobInstance(), step.getName());
 
-		return count > 0;
-	}
+        return count > 0;
+    }
 
-	@Override
-	public void abandonStepExecution() {
-		StepExecution lastStepExecution = stepExecutionHolder.get();
-		if (lastStepExecution != null && lastStepExecution.getStatus().isGreaterThan(BatchStatus.STOPPING)) {
-			lastStepExecution.upgradeStatus(BatchStatus.ABANDONED);
-			jobRepository.update(lastStepExecution);
-		}
-	}
+    @Override
+    public void abandonStepExecution() {
+        StepExecution lastStepExecution = stepExecutionHolder.get();
+        if (lastStepExecution != null && lastStepExecution.getStatus().isGreaterThan(BatchStatus.STOPPING)) {
+            lastStepExecution.upgradeStatus(BatchStatus.ABANDONED);
+            jobRepository.updateStepExecution(lastStepExecution);
+        }
+    }
 
-	@Override
-	public void updateJobExecutionStatus(FlowExecutionStatus status) {
-		execution.setStatus(findBatchStatus(status));
-		exitStatus = exitStatus.and(new ExitStatus(status.getName()));
-		execution.setExitStatus(exitStatus);
-	}
+    @Override
+    public void updateJobExecutionStatus(FlowExecutionStatus status) {
+        execution.setStatus(findBatchStatus(status));
+        exitStatus = exitStatus.and(new ExitStatus(status.getName()));
+        execution.setExitStatus(exitStatus);
+    }
 
-	@Override
-	public JobExecution getJobExecution() {
-		return execution;
-	}
+    @Override
+    public JobExecution getJobExecution() {
+        return execution;
+    }
 
-	@Override
-	public StepExecution getStepExecution() {
-		return stepExecutionHolder.get();
-	}
+    @Override
+    public StepExecution getStepExecution() {
+        return stepExecutionHolder.get();
+    }
 
-	@Override
-	public void close(FlowExecution result) {
-		stepExecutionHolder.set(null);
-	}
+    @Override
+    public void close(FlowExecution result) {
+        stepExecutionHolder.set(null);
+    }
 
-	@Override
-	public boolean isRestart() {
-		if (getStepExecution() != null && getStepExecution().getStatus() == BatchStatus.ABANDONED) {
-			/*
+    @Override
+    public boolean isRestart() {
+        if (getStepExecution() != null && getStepExecution().getStatus() == BatchStatus.ABANDONED) {
+            /*
 			 * This is assumed to be the last step execution and it was marked
 			 * abandoned, so we are in a restart of a stopped step.
 			 */
-			// TODO: mark the step execution in some more definitive way?
-			return true;
-		}
-		return execution.getStepExecutions().isEmpty();
-	}
+            // TODO: mark the step execution in some more definitive way?
+            return true;
+        }
+        return execution.getStepExecutions().isEmpty();
+    }
 
-	@Override
-	public void addExitStatus(String code) {
-		exitStatus = exitStatus.and(new ExitStatus(code));
-	}
+    @Override
+    public void addExitStatus(String code) {
+        exitStatus = exitStatus.and(new ExitStatus(code));
+    }
 
-	/**
-	 * @param status
-	 * @return
-	 */
-	protected BatchStatus findBatchStatus(FlowExecutionStatus status) {
-		for (BatchStatus batchStatus : BatchStatus.values()) {
-			if (status.getName().startsWith(batchStatus.toString())) {
-				return batchStatus;
-			}
-		}
-		return BatchStatus.UNKNOWN;
-	}
+    /**
+     * @param status
+     * @return
+     */
+    protected BatchStatus findBatchStatus(FlowExecutionStatus status) {
+        for (BatchStatus batchStatus : BatchStatus.values()) {
+            if (status.getName().startsWith(batchStatus.toString())) {
+                return batchStatus;
+            }
+        }
+        return BatchStatus.UNKNOWN;
+    }
 
 }

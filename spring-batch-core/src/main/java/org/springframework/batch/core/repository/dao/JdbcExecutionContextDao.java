@@ -53,7 +53,7 @@ import org.springframework.util.Assert;
  * @author Michael Minella
  * @author David Turanski
  */
-public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implements ExecutionContextDao {
+public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implements ExecutionContextDao<JobExecution, StepExecution, ExecutionContext> {
 
 	private static final String FIND_JOB_EXECUTION_CONTEXT = "SELECT SHORT_CONTEXT, SERIALIZED_CONTEXT "
 			+ "FROM %PREFIX%JOB_EXECUTION_CONTEXT WHERE JOB_EXECUTION_ID = ?";
@@ -105,7 +105,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public ExecutionContext getExecutionContext(JobExecution jobExecution) {
+	public ExecutionContext getJobExecutionContext(JobExecution jobExecution) {
 		Long executionId = jobExecution.getId();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
 
@@ -120,7 +120,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public ExecutionContext getExecutionContext(StepExecution stepExecution) {
+	public ExecutionContext getStepExecutionContext(StepExecution stepExecution) {
 		Long executionId = stepExecution.getId();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
 
@@ -135,7 +135,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public void updateExecutionContext(final JobExecution jobExecution) {
+	public void updateJobExecutionContext(final JobExecution jobExecution) {
 		Long executionId = jobExecution.getId();
 		ExecutionContext executionContext = jobExecution.getExecutionContext();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
@@ -147,7 +147,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public void updateExecutionContext(final StepExecution stepExecution) {
+	public void updateStepExecutionContext(final StepExecution stepExecution) {
 		// Attempt to prevent concurrent modification errors by blocking here if
 		// someone is already trying to do it.
 		synchronized (stepExecution) {
@@ -163,7 +163,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public void saveExecutionContext(JobExecution jobExecution) {
+	public void saveJobExecutionContext(JobExecution jobExecution) {
 
 		Long executionId = jobExecution.getId();
 		ExecutionContext executionContext = jobExecution.getExecutionContext();
@@ -176,7 +176,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public void saveExecutionContext(StepExecution stepExecution) {
+	public void saveStepExecutionContext(StepExecution stepExecution) {
 		Long executionId = stepExecution.getId();
 		ExecutionContext executionContext = stepExecution.getExecutionContext();
 		Assert.notNull(executionId, "ExecutionId must not be null.");
@@ -188,7 +188,7 @@ public class JdbcExecutionContextDao extends AbstractJdbcBatchMetadataDao implem
 	}
 
 	@Override
-	public void saveExecutionContexts(Collection<StepExecution> stepExecutions) {
+	public void saveStepExecutionContexts(Collection<StepExecution> stepExecutions) {
 		Assert.notNull(stepExecutions, "Attempt to save an null collection of step executions");
 		Map<Long, String> serializedContexts = new HashMap<Long, String>(stepExecutions.size());
 		for (StepExecution stepExecution : stepExecutions) {

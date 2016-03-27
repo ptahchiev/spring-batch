@@ -61,7 +61,7 @@ import org.springframework.util.Assert;
  *
  * @see StepExecutionDao
  */
-public class JdbcStepExecutionDao extends AbstractJdbcBatchMetadataDao implements StepExecutionDao, InitializingBean {
+public class JdbcStepExecutionDao extends AbstractJdbcBatchMetadataDao implements StepExecutionDao<StepExecution, JobExecution>, InitializingBean {
 
 	private static final Log logger = LogFactory.getLog(JdbcStepExecutionDao.class);
 
@@ -111,7 +111,7 @@ public class JdbcStepExecutionDao extends AbstractJdbcBatchMetadataDao implement
 	 * stepExecutionIncrementor, and then set in the StepExecution. All values
 	 * will then be stored via an INSERT statement.
 	 *
-	 * @see StepExecutionDao#saveStepExecution(StepExecution)
+	 * @see StepExecutionDao#saveStepExecution(Object)
 	 */
 	@Override
 	public void saveStepExecution(StepExecution stepExecution) {

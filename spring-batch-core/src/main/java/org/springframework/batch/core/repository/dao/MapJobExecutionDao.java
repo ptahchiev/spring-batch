@@ -159,4 +159,9 @@ public class MapJobExecutionDao implements JobExecutionDao<JobExecution, JobInst
 			jobExecution.setVersion(saved.getVersion());
 		}
 	}
+
+	@Override
+	public JobExecution getLastJobExecution(JobInstance jobInstance) {
+		return null;
+	}
 }

@@ -39,6 +39,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
+import javax.batch.runtime.JobInstance;
+
 /**
  * A {@link Step} implementation that provides common behavior to subclasses, including registering and calling
  * listeners.
@@ -61,7 +63,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 
 	private CompositeStepExecutionListener stepExecutionListener = new CompositeStepExecutionListener();
 
-	private JobRepository jobRepository;
+	private JobRepository<org.springframework.batch.core.intf.JobExecution, JobInstance, StepExecution> jobRepository;
 
 	/**
 	 * Default constructor.
@@ -185,7 +187,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 		}
 		stepExecution.setStartTime(new Date());
 		stepExecution.setStatus(BatchStatus.STARTED);
-		getJobRepository().update(stepExecution);
+		getJobRepository().updateStepExecution(stepExecution);
 
 		// Start with a default value that will be trumped by anything
 		ExitStatus exitStatus = ExitStatus.EXECUTING;
@@ -243,7 +245,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 			}
 
 			try {
-				getJobRepository().updateExecutionContext(stepExecution);
+				getJobRepository().updateStepExecutionContext(stepExecution);
 			}
 			catch (Exception e) {
 				stepExecution.setStatus(BatchStatus.UNKNOWN);
@@ -257,7 +259,7 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 			stepExecution.setExitStatus(exitStatus);
 
 			try {
-				getJobRepository().update(stepExecution);
+				getJobRepository().updateStepExecution(stepExecution);
 			}
 			catch (Exception e) {
 				stepExecution.setStatus(BatchStatus.UNKNOWN);
@@ -343,11 +345,11 @@ public abstract class AbstractStep implements Step, InitializingBean, BeanNameAw
 	 *
 	 * @param jobRepository is a mandatory dependence (no default).
 	 */
-	public void setJobRepository(JobRepository jobRepository) {
+	public void setJobRepository(JobRepository<org.springframework.batch.core.intf.JobExecution, JobInstance, StepExecution> jobRepository) {
 		this.jobRepository = jobRepository;
 	}
 
-	protected JobRepository getJobRepository() {
+	protected JobRepository<org.springframework.batch.core.intf.JobExecution, JobInstance, StepExecution> getJobRepository() {
 		return jobRepository;
 	}
 

@@ -59,7 +59,7 @@ import org.springframework.util.Assert;
  * @author Robert Kasanicky
  * @author Michael Minella
  */
-public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements JobExecutionDao, InitializingBean {
+public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements JobExecutionDao<JobExecution, JobInstance>, InitializingBean {
 
 	private static final Log logger = LogFactory.getLog(JdbcJobExecutionDao.class);
 
@@ -123,7 +123,7 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	}
 
 	@Override
-	public List<JobExecution> findJobExecutions(final JobInstance job) {
+	public List<JobExecution> findAllByJobInstance(final JobInstance job) {
 
 		Assert.notNull(job, "Job cannot be null.");
 		Assert.notNull(job.getId(), "Job Id cannot be null.");
@@ -137,12 +137,12 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * abstraction. Once a new id has been obtained, the JobExecution is saved
 	 * via a SQL INSERT statement.
 	 *
-	 * @see JobExecutionDao#saveJobExecution(JobExecution)
+	 * @see JobExecutionDao#save(Object)
 	 * @throws IllegalArgumentException if jobExecution is null, as well as any
 	 * of it's fields to be persisted.
 	 */
 	@Override
-	public void saveJobExecution(JobExecution jobExecution) {
+	public void save(JobExecution jobExecution) {
 
 		validateJobExecution(jobExecution);
 
@@ -184,7 +184,7 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * ID. The database is then queried to ensure that the ID exists, which
 	 * ensures that it is valid.
 	 *
-	 * @see JobExecutionDao#updateJobExecution(JobExecution)
+	 * @see JobExecutionDao#updateJobExecution(Object)
 	 */
 	@Override
 	public void updateJobExecution(JobExecution jobExecution) {
@@ -265,7 +265,7 @@ public class JdbcJobExecutionDao extends AbstractJdbcBatchMetadataDao implements
 	 * getLastJobExecution(java.lang.String)
 	 */
 	@Override
-	public JobExecution getJobExecution(Long executionId) {
+	public JobExecution findOne(Long executionId) {
 		try {
 			JobExecution jobExecution = getJdbcTemplate().queryForObject(getQuery(GET_EXECUTION_BY_ID),
 					new JobExecutionRowMapper(), executionId);

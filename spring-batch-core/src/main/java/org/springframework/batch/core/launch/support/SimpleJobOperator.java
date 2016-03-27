@@ -397,7 +397,7 @@ public class SimpleJobOperator implements JobOperator, InitializingBean {
 			throw new JobExecutionNotRunningException("JobExecution must be running so that it can be stopped: "+jobExecution);
 		}
 		jobExecution.setStatus(BatchStatus.STOPPING);
-		jobRepository.update(jobExecution);
+		jobRepository.updateJobExecution(jobExecution);
 
 		try {
 			Job job = jobRegistry.getJob(jobExecution.getJobInstance().getJobName());
@@ -443,7 +443,7 @@ public class SimpleJobOperator implements JobOperator, InitializingBean {
 		logger.info("Aborting job execution: " + jobExecution);
 		jobExecution.upgradeStatus(BatchStatus.ABANDONED);
 		jobExecution.setEndTime(new Date());
-		jobRepository.update(jobExecution);
+		jobRepository.updateJobExecution(jobExecution);
 
 		return jobExecution;
 	}

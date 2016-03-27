@@ -87,7 +87,7 @@ public class JsrEndState extends org.springframework.batch.core.job.flow.support
 				ExecutionContext executionContext = jobExecution.getExecutionContext();
 				executionContext.put("batch.restartStep", restart);
 				executionContext.put("batch.stoppedStep", stepExecution.getStepName());
-				jobRepository.updateExecutionContext(jobExecution);
+				jobRepository.updateJobExecutionContext(jobExecution);
 
 				if (!executor.isRestart()) {
 					/*
